@@ -21,9 +21,9 @@ public class Iob extends Sprite {
     @Override
     public void update (float deltaTime) {
         super.update(deltaTime);
-        
+
         dimensions.x = (int) getPosX() - dimensions.width / 2;
         dimensions.y = (int) getPosY() - dimensions.height / 2;
     }
-    
+
 }

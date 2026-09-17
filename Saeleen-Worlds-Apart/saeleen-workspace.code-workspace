@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "C:\\Users\\fiona\\Documents\\Projects\\Saeleen"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/.classpath": true,
+			"**/.project": true,
+			"**/.settings": true,
+			"**/.factorypath": true
+		}
+	}
+}

@@ -33,13 +33,13 @@ public class Enemy extends Npc {
 	Color mb50 = new Color(127,0,110);
 	Color mb0 = new Color(190,0,82);
 	Color xb100 = new Color(255,244,104);
-	
+
 	public int level;
 	public int health;
 	public int maxHealth;
-	public int dmg;	
+	public int dmg;
     public int xpGiven;
-    
+
     private float startPosX;
     private float startPosY;
 
@@ -47,6 +47,13 @@ public class Enemy extends Npc {
     public boolean isWalkingRight = false;
 
     public boolean isPlayerInVision = false;
+    public boolean isHit = false;
+
+    private long whenPlayerWasHit;
+    private long ellapsedPlayerHitTime;
+
+    protected int boundsWidth = 30;
+    protected int boundsHeight = 30;
 
     public Enemy() {
     }
@@ -59,11 +66,11 @@ public class Enemy extends Npc {
 
         width = 64;
         height = 64;
-        dimensions = new Rectangle(0, 0, width, height);
+        dimensions = new Rectangle(0, 0, boundsWidth, boundsHeight);
         vision = new Rectangle((int) posX - width, (int) posY - height, width * 2, height * 2);
 
-        showDimensions = false;
-        showVision = false;
+        showDimensions = true;
+        showVision = true;
 
         try {
             playerChatImage = Renderer.loadImage("/images/clara-chat.png");
@@ -73,6 +80,9 @@ public class Enemy extends Npc {
             BufferedImage spriteSheet = ImageIO
                     .read(new File(getClass().getResource("/images/soldier-walking.png").toURI()));
             ;
+            BufferedImage spriteSheetTakeDamage = ImageIO
+                    .read(new File(getClass().getResource("/images/take-damage-anim.png").toURI()));
+            ;
 
             // set image cell size
             int rows = 1;
@@ -81,6 +91,7 @@ public class Enemy extends Npc {
             BufferedImage[] spriteSheetImagesDown = new BufferedImage[rows * cols];
             BufferedImage[] spriteSheetImagesLeft = new BufferedImage[rows * cols];
             BufferedImage[] spriteSheetImagesRight = new BufferedImage[rows * cols];
+            BufferedImage[] spriteSheetTakeDamageFrames = new BufferedImage[rows * cols];
 
             // add each cell to an array as per each direction
             for (int j = 0; j < cols; j++) {
@@ -115,6 +126,14 @@ public class Enemy extends Npc {
             }
             animRight.setFps(8);
             // #endregion
+
+            for (int j = 0; j < cols; j++) {
+                spriteSheetTakeDamageFrames[j] = spriteSheetTakeDamage.getSubimage(j * width, 0 * height, width, height);
+            }
+            for (BufferedImage image : spriteSheetTakeDamageFrames) {
+                animTakeDamage.images.add(image);
+            }
+            animTakeDamage.setFps(8);
 
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -202,15 +221,15 @@ public class Enemy extends Npc {
             //coin drop
             Random coinDropRate = new Random();
             int coinDrop = coinDropRate.nextInt(60);
-            
+
             List<Coin> coins = new ArrayList<Coin>();
-            coins.add(new Coin((int)getPosX()-20,(int)getPosY()-20));   
+            coins.add(new Coin((int)getPosX()-20,(int)getPosY()-20));
 
             if (coinDrop >= 40) {
-                coins.add(new Coin((int)getPosX()+20,(int)getPosY()+40));  
-                coins.add(new Coin((int)getPosX()-40,(int)getPosY()+20));  
+                coins.add(new Coin((int)getPosX()+20,(int)getPosY()+40));
+                coins.add(new Coin((int)getPosX()-40,(int)getPosY()+20));
             } else if (coinDrop < 40 && coinDrop > 20) {
-                coins.add(new Coin((int)getPosX()-40,(int)getPosY()+20));    
+                coins.add(new Coin((int)getPosX()-40,(int)getPosY()+20));
             }
 
             for (Coin coin : coins) {
@@ -220,7 +239,7 @@ public class Enemy extends Npc {
             //World.currentWorld.itemSprites.add(new Coin((int)getPosX(),(int)getPosY()));
 
             System.out.println("Drop was "+drop);
-        } 
+        }
     }
 
     @Override
@@ -249,16 +268,19 @@ public class Enemy extends Npc {
             } else {
                 isWalkingLeft = true;
             }
-            
+
         } else if (isPlayerInVision) {
             //determine shortest path to player and proceed towards it
         }
-        
+
 
         setPosX(posX + moveX * deltaTime);
         setPosY(posY + moveY * deltaTime);
-        dimensions.x = (int) getPosX() - dimensions.width / 2;
-        dimensions.y = (int) getPosY() - dimensions.height / 2;
+        dimensions.setBounds(
+            (int) getPosX() - boundsWidth / 2,
+            (int) getPosY() - boundsHeight / 2,
+            boundsWidth, boundsHeight
+        );
         vision.x = (int) getPosX() - width / 2;
         vision.y = (int) getPosY();
 
@@ -275,14 +297,22 @@ public class Enemy extends Npc {
         }
         if (wasHit) {
             World.currentWorld.sprites.remove(i);
+            isHit = true;
+            whenPlayerWasHit = System.nanoTime();
+        } else if (isHit) {
+            //set a 1 second timer for taking damage
+            if ((System.nanoTime() / 1000000000) > (whenPlayerWasHit / 1000000000) + 1) {
+                isHit = false;
+            }
         }
-        
+
         killCheck();
     }
 
     @Override
     public void render (Graphics g) {
         super.render(g);
+        BufferedImage playerTakeDamageImage = animTakeDamage.getImage();
         animations[currentAnimation].playAnimation();
 
         if (animations == null || currentAnimation >= animations.length) {
@@ -294,7 +324,7 @@ public class Enemy extends Npc {
         if (image == null) {
             return;
         }
-        
+
         int realX = (int) posX - (image.getWidth() / 2); //center x
         int realY = (int) posY - (image.getHeight() / 2); //center y
 
@@ -310,7 +340,7 @@ public class Enemy extends Npc {
         }
         if (World.currentPlayer.isNearEdgeOfMapYMin) {
             //north
-            realY = (int) posY - (image.getHeight() / 2); 
+            realY = (int) posY - (image.getHeight() / 2);
         } else if (World.currentPlayer.isNearEdgeOfMapYMax) {
             //south
             realY = (int) posY - (image.getHeight() / 2) - (Renderer.gameHeight * 2);
@@ -318,8 +348,6 @@ public class Enemy extends Npc {
             realY = realY - (int)Renderer.camY + Renderer.gameHeight / 2;
         }
 
-        dimensions.x = realX;
-        dimensions.y = realY;
         vision.x = realX - vision.width / 3;
         vision.y = realY - vision.height / 3;
 
@@ -332,23 +360,37 @@ public class Enemy extends Npc {
         g.fillRect(rect.x, rect.y, rect.width, rect.height);
         g.setColor(new Color(25,25,25)); //black #191919;
         g.fillRect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
-        
+
 		int hc1;
         hc1 = (int) (((float)health / (float)maxHealth) * 100);
-        
+
         if(hc1>=60)	g.setColor(hb100);
         else if (hc1<60 && hc1 >=41)	g.setColor(xb100);
     	else if (hc1<=40 && hc1 >=21)	g.setColor(Color.ORANGE);
-		else if (hc1<=20)	g.setColor(Color.RED); 
-        
+		else if (hc1<=20)	g.setColor(Color.RED);
+
         //draw health bar
 		g.fillRect(rect.x + 4, rect.y + 3, health, rect.height - 6);
-		
+
         //draw health text
-        g.setColor(Color.WHITE);	
+        g.setColor(Color.WHITE);
         g.setFont( new Font("Tahoma", Font.BOLD, 10));
         g.drawString("" + health, rect.x + 10, rect.y + 11);
-        
+
+        if (isHit) {
+            animTakeDamage.playAnimation();
+            g.drawImage(playerTakeDamageImage, realX, realY, playerTakeDamageImage.getWidth(), playerTakeDamageImage.getHeight(), null);
+
+            ellapsedPlayerHitTime += (System.nanoTime() / 1000000000) / 1000000;
+
+            if ((System.nanoTime() / 1000000000) > (whenPlayerWasHit / 1000000000) + 1) {
+                //ellapsedPlayerHitTime = System.nanoTime();
+            }
+
+            //g.drawLine(spritePoint.x, spritePoint.y, playerPoint.x, playerPoint.y);
+        } else if (!isHit) {
+            ellapsedPlayerHitTime = 0;
+        }
     }
 
 

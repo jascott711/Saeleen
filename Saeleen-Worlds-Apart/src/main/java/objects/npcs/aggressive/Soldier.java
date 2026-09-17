@@ -22,7 +22,7 @@ import world.World;
  * Soldier
  */
 public class Soldier extends Enemy {
-	   
+
     private float startPosX;
     private float startPosY;
 
@@ -37,11 +37,13 @@ public class Soldier extends Enemy {
 
         width = 64;
         height = 64;
-        dimensions = new Rectangle(0, 0, width, height);
+        boundsWidth = 30;
+        boundsHeight = 60;
+        dimensions = new Rectangle(0, 0, boundsWidth, boundsHeight);
         vision = new Rectangle((int) posX - width, (int) posY - height, width * 2, height * 2);
 
-        showDimensions = false;
-        showVision = false;
+        showDimensions = true;
+        showVision = true;
 
         try {
             playerChatImage = Renderer.loadImage("/images/clara-chat.png");
@@ -122,7 +124,7 @@ public class Soldier extends Enemy {
 
     @Override
     public void render (Graphics g) {
-        super.render(g);    
+        super.render(g);
     }
 
 

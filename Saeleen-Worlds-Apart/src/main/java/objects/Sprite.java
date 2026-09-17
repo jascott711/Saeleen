@@ -31,7 +31,8 @@ public class Sprite {
 
     protected Rectangle dimensions = new Rectangle(0, 0, width, height); // interaction bounds
     protected Rectangle vision = new Rectangle((int) posX - width, (int) posY - height, width * 2, height * 2); // vision
-                                                                                                                // bounds
+    protected Rectangle[] hitboxes;
+                                                                                            // bounds
 
     // public BufferedImage image = null;
     public Animation[] animations;
@@ -103,8 +104,11 @@ public class Sprite {
         this.posY = posY;
         return this;
     }
+    public Rectangle[] getHitboxes() {
+        return hitboxes != null ? hitboxes : new Rectangle[] { dimensions };
+    }
     //#endregion
-    
+
     public boolean doesCollide(Sprite sprite){
         float myLeft = getPosX() - width / 2;
         float myRight = getPosX() + width / 2;
@@ -118,7 +122,7 @@ public class Sprite {
 
         if (myLeft < otherRight && myRight > otherLeft && myDown > otherUp && myUp < otherDown) {
             return true;
-        }       
+        }
 
         return false;
     }
@@ -137,7 +141,7 @@ public class Sprite {
         if (myLeft < otherRight && myRight > otherLeft && myDown > otherUp && myUp < otherDown) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -148,13 +152,13 @@ public class Sprite {
         if (Input.getKeyDown(KeyEvent.VK_V)) {
             if (showDimensions) {
                 showDimensions = false;
-            } 
+            }
             else if (!showDimensions) {
                 showDimensions = true;
             }
             if (showVision) {
                 showVision = false;
-            } 
+            }
             else if (!showVision) {
                 showVision = true;
             }
@@ -173,10 +177,10 @@ public class Sprite {
         if (image == null) {
             return;
         }
-        
+
         int realX = (int) posX - (image.getWidth() / 2); //center x
         int realY = (int) posY - (image.getHeight() / 2); //center y
-        
+
         //check if player is close to the edge of the map for camera toggle
         if (World.currentPlayer.isNearEdgeOfMapXMin) {
             realX = (int) posX - (image.getWidth() / 2);
@@ -186,7 +190,7 @@ public class Sprite {
             realX = realX - (int)Renderer.camX + Renderer.gameWidth / 2;
         }
         if (World.currentPlayer.isNearEdgeOfMapYMin) {
-            realY = (int) posY - (image.getHeight() / 2); 
+            realY = (int) posY - (image.getHeight() / 2);
         } else if (World.currentPlayer.isNearEdgeOfMapYMax) {
             realY = (int) posY - (image.getHeight() / 2) - (Renderer.gameHeight * 2);
         } else {
@@ -195,25 +199,29 @@ public class Sprite {
 
         //draw sprite
         g.drawImage(image, realX, realY, image.getWidth(), image.getHeight(), null);
-        
+
         // ------------ testing
         if (showDimensions) {
             //draw sprite bounds for collision detection
             g.setColor(Color.RED);
-            g.drawRect(realX,realY,dimensions.width,dimensions.height);
+            for (Rectangle box : getHitboxes()) {
+                int boxScreenX = box.x - (int) Renderer.camX + Renderer.gameWidth / 2;
+                int boxScreenY = box.y - (int) Renderer.camY + Renderer.gameHeight / 2;
+                g.drawRect(boxScreenX, boxScreenY, box.width, box.height);
+            }
         }
         if (showVision) {
             //draw sprite vision for collision detection
             g.setColor(Color.YELLOW);
-            g.drawRect(realX - vision.width / 2, realY - vision.height / 2, (int)(vision.width * 1.5), (int)(vision.height * 1.5));        
+            g.drawRect(realX - vision.width / 2, realY - vision.height / 2, (int)(vision.width * 1.5), (int)(vision.height * 1.5));
         }
-        
+
         if(this instanceof Player){
             //System.out.println(this.getClass().toString()+" POS x"+ posX + " y" +posY);
             //System.out.println(this.getClass().toString()+" REAL x"+ realX + " y" +realY);
         }
 
-        
+
         if(this instanceof Item || this instanceof Tatem){
             if (doesCollide(World.currentPlayer)) {
                 g.setColor(Color.WHITE);
@@ -222,5 +230,5 @@ public class Sprite {
         }
     }
 
-    
+
 }

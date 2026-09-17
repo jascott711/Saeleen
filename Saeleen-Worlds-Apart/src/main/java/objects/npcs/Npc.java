@@ -47,6 +47,8 @@ public class Npc extends Mob {
 
     public Npc(float posX, float posY) {
         super(posX, posY);
+
+        isSolid = true;
     }
 
     //get and draw chat window

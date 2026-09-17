@@ -22,7 +22,7 @@ public class World {
     public static World currentWorld = null;
     public static Player currentPlayer = new objects.Player(1000,1200);
 
-    private static long lastTime = 0;
+    private static long lastTime = System.nanoTime();
 
     public ArrayList<Sprite> sprites = new ArrayList<Sprite>();
     public ArrayList<Sprite> addSprites = new ArrayList<Sprite>();

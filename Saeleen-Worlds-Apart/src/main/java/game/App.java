@@ -9,7 +9,7 @@ import objects.impassable.Iob;
 import objects.items.Apple;
 import objects.items.Item;
 import objects.items.ManaPotion;
-import objects.npcs.aggressive.Enemy;
+import objects.npcs.aggressive.Soldier;
 import objects.npcs.passive.Tatem;
 import ui.*;
 import world.World;
@@ -21,7 +21,7 @@ public final class App {
 
     public App() {
         Renderer.init();
-       
+
         try {
             World.currentWorld = new world.World();
 
@@ -29,11 +29,11 @@ public final class App {
             World.currentWorld.npcSprites.add(new Tatem(1250,750));
 
             //add enemies
-            Enemy[] enemies = {
-                new Enemy(3000,1500), new Enemy(3030,1600), new Enemy(3020,1700),
-                new Enemy(3200,1800), new Enemy(3130,1900), new Enemy(3220,2000)
+            Soldier[] enemies = {
+                new Soldier(3000,1500), new Soldier(3030,1600), new Soldier(3020,1700),
+                new Soldier(3200,1800), new Soldier(3130,1900), new Soldier(3220,2000)
             };
-            for (Enemy sol : enemies) {
+            for (Soldier sol : enemies) {
                 World.currentWorld.npcSprites.add(sol);
             }
 
@@ -67,6 +67,8 @@ public final class App {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        Renderer.start();
     }
 
 	public static void quit() {

@@ -110,9 +110,11 @@ public class Renderer {
         });
 
         frame.setVisible(true);
-
+        canvas.createBufferStrategy(3);
         canvas.addKeyListener(new Input());
+    }
 
+    public static void start() {
         startRendering();
     }
 
@@ -155,11 +157,18 @@ public class Renderer {
 
                     g.dispose();
 
-                    g = canvas.getGraphics();
-                    g.drawImage(vImage, 0, 0, gameWidth, gameHeight, null);
+                    java.awt.image.BufferStrategy bs = canvas.getBufferStrategy();
+                    if (bs == null) {
+                        canvas.createBufferStrategy(3);
+                        bs = canvas.getBufferStrategy();
+                    }
 
+                    Graphics bg = bs.getDrawGraphics();
+                    bg.drawImage(vImage, 0, 0, gameWidth, gameHeight, null);
+                    bg.dispose();
+
+                    bs.show();
                     Toolkit.getDefaultToolkit().sync();
-                    g.dispose();
 
                     long totalTime = System.nanoTime() - startTime;
                     if (totalTime < targetTime) {
@@ -181,7 +190,7 @@ public class Renderer {
         BufferedImage rawImage = ImageIO.read(Renderer.class.getResource(path));
         BufferedImage finalImage = canvas.getGraphicsConfiguration()
             .createCompatibleImage(rawImage.getWidth(), rawImage.getHeight(),rawImage.getTransparency());
-            
+
         finalImage.getGraphics().drawImage(rawImage,0,0,rawImage.getWidth(),rawImage.getHeight(),null);
 
         return finalImage;
@@ -190,9 +199,9 @@ public class Renderer {
     public int getGameWidth(){
         int thisGameWidth = gameWidth;
         return thisGameWidth;
-    }    
+    }
     public int getGameHeight(){
         int thisGameHeight = gameHeight;
         return thisGameHeight;
-    } 
+    }
 }

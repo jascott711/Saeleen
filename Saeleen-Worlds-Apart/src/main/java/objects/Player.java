@@ -71,6 +71,9 @@ public class Player extends Npc implements ActionListener {
     private long whenPlayerWasHit;
     private long ellapsedPlayerHitTime;
 
+    private int boundsWidth = 30;
+    private int boundsHeight = 30;
+
     private String actionString = "Chill";
 
     public Animation animAttackUp = new Animation(), animAttackDown = new Animation(), animAttackLeft = new Animation(),
@@ -84,13 +87,13 @@ public class Player extends Npc implements ActionListener {
 
         width = 64;
         height = 64;
-        dimensions = new Rectangle(0, 0, width, height);
+        dimensions = new Rectangle(0, 0, boundsWidth, boundsHeight);
         vision = new Rectangle((int) posX - width, (int) posY - height, width * 2, height * 2);
 
         myItems = new ArrayList<Item>();
 
-        showDimensions = false;
-        showVision = false;
+        showDimensions = true;
+        showVision = true;
 
         try {
             playerChatImage = Renderer.loadImage("/images/clara-chat.png");
@@ -270,7 +273,7 @@ public class Player extends Npc implements ActionListener {
     // #endregion
 
     public void checkLevelUP() {
-        if (getExperience() >= getXpToLevel()) {  
+        if (getExperience() >= getXpToLevel()) {
             setLevel(getLevel() + 1);
             setMaxHealth((int)(getMaxHealth() * 1.5));
             setHealth(getMaxHealth());
@@ -298,7 +301,7 @@ public class Player extends Npc implements ActionListener {
                 animation.setFps(16);
             }
         } else {
-            runSpeed = 200;            
+            runSpeed = 200;
             for (Animation animation : animations) {
                 animation.setFps(8);
             }
@@ -308,7 +311,7 @@ public class Player extends Npc implements ActionListener {
         if (Input.getKey(KeyEvent.VK_A)) {
             // west
             direction = 0;
-            int checkForKeyA = width / 2;           
+            int checkForKeyA = width / 2;
             if (isIntersectingIob) {
                 //setPosX((getWidth() / 2) - stepback);
             } else if (getDimensions().x >= checkForKeyA) {
@@ -320,7 +323,7 @@ public class Player extends Npc implements ActionListener {
         if (Input.getKey(KeyEvent.VK_D)) {
             // east
             direction = 1;
-            int checkForKeyD = Renderer.gameWidth * 3 - 300;                  
+            int checkForKeyD = Renderer.gameWidth * 3 - 300;
             if (isIntersectingIob) {
                 //setPosX(getPosX()-(getWidth() / 2) + stepback);
             } else if (getDimensions().x <= checkForKeyD) {
@@ -354,69 +357,6 @@ public class Player extends Npc implements ActionListener {
                 animations[currentAnimation].playAnimation();
             }
         }
-        isIntersectingIob = false;
-        //
-        for (Iob sprite : World.currentWorld.iobSprites) {
-            if (getDimensions().intersects(sprite.getDimensions())) {
-                isIntersectingIob = true;
-                System.out.println("-------------------");
-                //System.out.println("object: " + sprite.getDimensions().getLocation().toString());
-                //System.out.println("player: " + getDimensions().getLocation().toString());
-
-                //check left & right
-                // if (sprite.getDimensions().getLocation().x > getDimensions().getLocation().x) {
-                //     setPosX((sprite.getDimensions().getLocation().x - width/2) - stepback);
-                // } else if (sprite.getDimensions().getLocation().x + sprite.getDimensions().width > getDimensions().getLocation().x) {
-                //     setPosX((sprite.getDimensions().getLocation().x + sprite.getDimensions().width + width/2) + stepback);
-                // }
-
-                //check up & down
-                // if (sprite.getDimensions().getLocation().y > getDimensions().getLocation().y) {
-                //     setPosY((sprite.getDimensions().getLocation().y - height/2) - stepback);
-                // } else if (sprite.getDimensions().getLocation().y + sprite.getDimensions().height > getDimensions().getLocation().y) {
-                //     setPosY((sprite.getDimensions().getLocation().y + sprite.getDimensions().height + height/2) + stepback);
-                // }
-
-
-                //measure distance between each side of the two intersecting rectangles
-                spritePoint = new Point((int)sprite.getPosX(), (int)sprite.getPosY());
-                playerPoint = new Point((int)realX, (int)realY);
-                double spriteCenterDistance = Math.sqrt(spritePoint.x * playerPoint.x + spritePoint.y * playerPoint.y);
-                double spriteLeftEdgeDistance = Math.sqrt((spritePoint.x - (sprite.getDimensions().width / 2)) * playerPoint.x + spritePoint.y * playerPoint.y);
-                double spriteTopEdgeDistance = Math.sqrt(spritePoint.x * playerPoint.x + (spritePoint.y - (sprite.getDimensions().height / 2)) * playerPoint.y);
-                double spriteRightEdgeDistance = Math.sqrt((spritePoint.x + (sprite.getDimensions().width / 2)) * playerPoint.x + spritePoint.y * playerPoint.y);
-                double spriteBottomEdgeDistance = Math.sqrt(spritePoint.x * playerPoint.x + (spritePoint.y + (sprite.getDimensions().height / 2)) * playerPoint.y);
-
-
-                System.out.println("spriteCenterDistance: " + spriteCenterDistance);
-                System.out.println("spriteLeftEdgeDistance: " + spriteLeftEdgeDistance);
-                System.out.println("spriteTopEdgeDistance: " + spriteTopEdgeDistance );
-                System.out.println("spriteRightEdgeDistance: " + spriteRightEdgeDistance);
-                System.out.println("spriteBottomEdgeDistance: " + spriteBottomEdgeDistance );
-
-                // float wy = (getDimensions().width() + sprite.getDimensions().width()) * (getDimensions().centerY() - sprite.getDimensions().centerY());
-                // float hx = (getDimensions().height() + sprite.getDimensions().height()) * (getDimensions().centerX() - sprite.getDimensions().centerX());
-
-                // if (wy > hx) {
-                //     if (wy > -hx) {
-                //          /* top */
-                //     }            
-                //     else {
-                //         /* left */
-                //     }
-                // }       
-                // else {
-                //     if (wy > -hx) {}
-                //         /* right */
-                //     else {
-                //        /* bottom */
-                //     }
-                // }
-            }
-        }
-
-
-        
 
         if (Input.getKeyDown(KeyEvent.VK_F)) {
             //npc interaction
@@ -426,7 +366,7 @@ public class Player extends Npc implements ActionListener {
                 }
                 if (doesCollide(sprite)) {
                 }
-                if (inVisionOf(sprite)) {    
+                if (inVisionOf(sprite)) {
                     sprite.speak();
                     isInChat = true;
                 } else {
@@ -440,7 +380,7 @@ public class Player extends Npc implements ActionListener {
             int itemIndex = -1;
             for (Item sprite : World.currentWorld.itemSprites) {
                 if (doesCollide(sprite)) {
-                    if (myItems.size() < itemLimit) {                    
+                    if (myItems.size() < itemLimit) {
                         sprite.pickItemUp(this);
                     }
                     itemIndex = World.currentWorld.itemSprites.indexOf(sprite);
@@ -450,12 +390,62 @@ public class Player extends Npc implements ActionListener {
             if (itemIndex >= 0 && myItems.size() < itemLimit) {
                 World.currentWorld.itemSprites.remove(itemIndex);
             }
-           
-        }
-        
 
-        setPosX(posX + moveX * deltaTime);
-        setPosY(posY + moveY * deltaTime);
+        }
+
+        float newX = posX + moveX * deltaTime;
+        float newY = posY + moveY * deltaTime;
+
+        Rectangle testDimensionsX = new Rectangle(
+            (int) newX - dimensions.width / 2, dimensions.y, dimensions.width, dimensions.height
+        );
+        boolean blockedX = false;
+        for (Iob sprite : World.currentWorld.iobSprites) {
+            for (Rectangle box : sprite.getHitboxes()) {
+                if (testDimensionsX.intersects(box)) {
+                    blockedX = true;
+                    break;
+                }
+            }
+            if (blockedX) break;
+        }
+        for (Npc sprite : World.currentWorld.npcSprites) {
+            if (!sprite.isSolid) continue;
+            for (Rectangle box : sprite.getHitboxes()) {
+                if (testDimensionsX.intersects(box)) {
+                    blockedX = true;
+                    break;
+                }
+            }
+            if (blockedX) break;
+        }
+        if (!blockedX) setPosX(newX);
+
+        Rectangle testDimensionsY = new Rectangle(
+            dimensions.x, (int) newY - dimensions.height / 2, dimensions.width, dimensions.height
+        );
+        boolean blockedY = false;
+        for (Iob sprite : World.currentWorld.iobSprites) {
+            for (Rectangle box : sprite.getHitboxes()) {
+                if (testDimensionsY.intersects(box)) {
+                    blockedY = true;
+                    break;
+                }
+            }
+            if (blockedY) break;
+        }
+        for (Npc sprite : World.currentWorld.npcSprites) {
+            if (!sprite.isSolid) continue;
+            for (Rectangle box : sprite.getHitboxes()) {
+                if (testDimensionsY.intersects(box)) {
+                    blockedY = true;
+                    break;
+                }
+            }
+            if (blockedY) break;
+        }
+        if (!blockedY) setPosY(newY);
+
         dimensions.x = (int) getPosX() - dimensions.width / 2;
         dimensions.y = (int) getPosY() - dimensions.height / 2;
         vision.x = (int) getPosX() - width / 2;
@@ -512,22 +502,22 @@ public class Player extends Npc implements ActionListener {
                     // System.out.println("Collision Detected");
                     // System.out.println(sprite.getClass().toString());
                     if (sprite instanceof Enemy) {
-                        this.health -= ((Enemy)sprite).dmg;    
-                        isHit = true;      
-                        whenPlayerWasHit = System.nanoTime();       
-                    } 
+                        this.health -= ((Enemy)sprite).dmg;
+                        isHit = true;
+                        whenPlayerWasHit = System.nanoTime();
+                    }
                 }
-                if (inVisionOf(sprite)) {    
+                if (inVisionOf(sprite)) {
                     showAction = true;
-    
+
                     if (sprite instanceof Tatem) {
                         actionString = "Speak";
                     }
-    
+
                     if (showAction) {
                         //continue;
                     }
-    
+
                 } else {
                     isInChat = false;
                     sprite.clearSpeak();
@@ -568,7 +558,7 @@ public class Player extends Npc implements ActionListener {
             //animations[currentAnimation].playAnimationOnce();
 
         }
-        
+
         if (Input.getKeyDown(KeyEvent.VK_O)) {
         	spellChoice--;
         	if(spellChoice < 0)	{
@@ -583,11 +573,11 @@ public class Player extends Npc implements ActionListener {
             }
         }
 
-        // if (Input.getKeyDown(KeyEvent.VK_K)) {     
+        // if (Input.getKeyDown(KeyEvent.VK_K)) {
         //     if (myItems.size() > 0) {
-        //         if (myItems.get(0).isUseable) {   
-        //             myItems.get(0).useItem(this);   
-        //             myItems.remove(0);             
+        //         if (myItems.get(0).isUseable) {
+        //             myItems.get(0).useItem(this);
+        //             myItems.remove(0);
         //         }
         //     }
         //     System.out.println(myItems.size());
@@ -608,10 +598,10 @@ public class Player extends Npc implements ActionListener {
 
 							Bolt bolt = new Bolt(World.currentPlayer.getPosX(), World.currentPlayer.getPosY(), direction);
                             World.currentWorld.addSprite(bolt);
-                            
+
                             int currentMana = World.currentPlayer.getMana();
                             World.currentPlayer.setMana(currentMana - 2);
-                            
+
 							if (World.currentPlayer.getMana() < 0) {
                                 World.currentPlayer.setMana(0);
                             }
@@ -622,68 +612,68 @@ public class Player extends Npc implements ActionListener {
 						}
 					}
 				}
-			}	
+			}
 
         }
 
-        
+
         if (Input.getKeyDown(KeyEvent.VK_1)) {
             if (myItems.size() >= 1) {
-                if (myItems.get(0).isConsumable) {   
-                    myItems.get(0).useItem(this);   
+                if (myItems.get(0).isConsumable) {
+                    myItems.get(0).useItem(this);
                     myItems.remove(0);
-                } else { 
+                } else {
                     myItems.get(0).useItem(this);
                 }
             }
         }
         if (Input.getKeyDown(KeyEvent.VK_2)) {
             if (myItems.size() >= 2) {
-                if (myItems.get(1).isConsumable) {   
-                    myItems.get(1).useItem(this);   
+                if (myItems.get(1).isConsumable) {
+                    myItems.get(1).useItem(this);
                     myItems.remove(1);
-                } else {                
-                    myItems.get(1).useItem(this);  
+                } else {
+                    myItems.get(1).useItem(this);
                 }
             }
         }
         if (Input.getKeyDown(KeyEvent.VK_3)) {
             if (myItems.size() >= 3) {
-                if (myItems.get(2).isConsumable) {   
-                    myItems.get(2).useItem(this);   
+                if (myItems.get(2).isConsumable) {
+                    myItems.get(2).useItem(this);
                     myItems.remove(2);
-                } else {                
-                    myItems.get(2).useItem(this);  
+                } else {
+                    myItems.get(2).useItem(this);
                 }
             }
         }
         if (Input.getKeyDown(KeyEvent.VK_4)) {
             if (myItems.size() >= 4) {
-                if (myItems.get(3).isConsumable) {   
-                    myItems.get(3).useItem(this);   
+                if (myItems.get(3).isConsumable) {
+                    myItems.get(3).useItem(this);
                     myItems.remove(3);
-                } else {                
-                    myItems.get(3).useItem(this);  
+                } else {
+                    myItems.get(3).useItem(this);
                 }
             }
         }
         if (Input.getKeyDown(KeyEvent.VK_5)) {
             if (myItems.size() >= 5) {
-                if (myItems.get(4).isConsumable) {   
-                    myItems.get(4).useItem(this);   
+                if (myItems.get(4).isConsumable) {
+                    myItems.get(4).useItem(this);
                     myItems.remove(4);
-                } else {                
-                    myItems.get(4).useItem(this);  
+                } else {
+                    myItems.get(4).useItem(this);
                 }
             }
         }
         if (Input.getKeyDown(KeyEvent.VK_6)) {
             if (myItems.size() >= 6) {
-                if (myItems.get(5).isConsumable) {   
-                    myItems.get(5).useItem(this);   
-                    myItems.remove(5);             
-                } else {                
-                    myItems.get(5).useItem(this);  
+                if (myItems.get(5).isConsumable) {
+                    myItems.get(5).useItem(this);
+                    myItems.remove(5);
+                } else {
+                    myItems.get(5).useItem(this);
                 }
             }
         }
@@ -716,7 +706,7 @@ public class Player extends Npc implements ActionListener {
     @Override
     public void render(Graphics g) {
         super.render(g);
-            
+
         BufferedImage playerTakeDamageImage = animTakeDamage.getImage();
 
         if (playerTakeDamageImage == null) {
@@ -725,7 +715,7 @@ public class Player extends Npc implements ActionListener {
 
         realX = (int) posX - (playerTakeDamageImage.getWidth() / 2); //center x
         realY = (int) posY - (playerTakeDamageImage.getHeight() / 2); //center y
-        
+
         //check if player is close to the edge of the map for camera toggle
         if (World.currentPlayer.isNearEdgeOfMapXMin) {
             realX = (int) posX - (playerTakeDamageImage.getWidth() / 2);
@@ -735,7 +725,7 @@ public class Player extends Npc implements ActionListener {
             realX = realX - (int)Renderer.camX + Renderer.gameWidth / 2;
         }
         if (World.currentPlayer.isNearEdgeOfMapYMin) {
-            realY = (int) posY - (playerTakeDamageImage.getHeight() / 2); 
+            realY = (int) posY - (playerTakeDamageImage.getHeight() / 2);
         } else if (World.currentPlayer.isNearEdgeOfMapYMax) {
             realY = (int) posY - (playerTakeDamageImage.getHeight() / 2) - (Renderer.gameHeight * 2);
         } else {
@@ -755,19 +745,19 @@ public class Player extends Npc implements ActionListener {
             int fontSize = (int)(ellapsedPlayerHitTime / 8);
             int widthGrowth = (int)(ellapsedPlayerHitTime / 16);
             int heightGrowth = (int)(ellapsedPlayerHitTime / 8);
-            
+
             g.setColor(Color.RED);
             g.setFont( new Font("Tahoma", Font.BOLD, 20 + fontSize));
             g.drawString("HIT", realX + 8 - widthGrowth, realY - heightGrowth);
 
-            g.drawLine(spritePoint.x, spritePoint.y, playerPoint.x, playerPoint.y);
+            //g.drawLine(spritePoint.x, spritePoint.y, playerPoint.x, playerPoint.y);
         } else if (!isHit) {
-            ellapsedPlayerHitTime = 0;            
+            ellapsedPlayerHitTime = 0;
         }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-         
+
     }
 }
