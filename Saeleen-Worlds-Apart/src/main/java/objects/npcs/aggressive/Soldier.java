@@ -40,7 +40,6 @@ public class Soldier extends Enemy {
         boundsWidth = 30;
         boundsHeight = 60;
         dimensions = new Rectangle(0, 0, boundsWidth, boundsHeight);
-        vision = new Rectangle((int) posX - width, (int) posY - height, width * 2, height * 2);
 
         showDimensions = true;
         showVision = true;

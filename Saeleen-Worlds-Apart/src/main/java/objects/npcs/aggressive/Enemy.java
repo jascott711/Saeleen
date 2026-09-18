@@ -67,7 +67,7 @@ public class Enemy extends Npc {
         width = 64;
         height = 64;
         dimensions = new Rectangle(0, 0, boundsWidth, boundsHeight);
-        vision = new Rectangle((int) posX - width, (int) posY - height, width * 2, height * 2);
+        vision = new Rectangle((int) posX - width, (int) posY - height, width * 4, height * 4);
 
         showDimensions = true;
         showVision = true;
@@ -249,6 +249,15 @@ public class Enemy extends Npc {
         float moveY = 0;
         float moveX = 0;
 
+        int visionWidth = (int)(vision.width * 1.5);
+        int visionHeight = (int)(vision.height * 1.5);
+        Rectangle visionArea = new Rectangle(
+            (int) getPosX() - visionWidth / 2,
+            (int) getPosY() - visionHeight / 2,
+            visionWidth, visionHeight
+        );
+        isPlayerInVision = isPlayerInVision || visionArea.intersects(World.currentPlayer.getDimensions());
+
         if (!isPlayerInVision) {
             //default walking pattern
             if ((posX > startPosX - 800) && isWalkingLeft) {
@@ -269,13 +278,59 @@ public class Enemy extends Npc {
                 isWalkingLeft = true;
             }
 
-        } else if (isPlayerInVision) {
-            //determine shortest path to player and proceed towards it
+        } else {
+            //chase the player along the shortest axis
+            float chaseX = World.currentPlayer.getPosX() - getPosX();
+            float chaseY = World.currentPlayer.getPosY() - getPosY();
+
+            if (Math.abs(chaseX) > Math.abs(chaseY)) {
+                if (chaseX < 0) {
+                    moveX -= runSpeed;
+                    currentAnimation = 0;
+                } else {
+                    moveX += runSpeed;
+                    currentAnimation = 1;
+                }
+            } else {
+                if (chaseY < 0) {
+                    moveY -= runSpeed;
+                    currentAnimation = 2;
+                } else {
+                    moveY += runSpeed;
+                    currentAnimation = 3;
+                }
+            }
+            animations[currentAnimation].playAnimation();
         }
 
 
-        setPosX(posX + moveX * deltaTime);
-        setPosY(posY + moveY * deltaTime);
+        float newX = posX + moveX * deltaTime;
+        float newY = posY + moveY * deltaTime;
+
+        Rectangle testX = new Rectangle(
+            (int) newX - boundsWidth / 2, dimensions.y, boundsWidth, boundsHeight
+        );
+        boolean blockedX = false;
+        for (Rectangle box : World.currentPlayer.getHitboxes()) {
+            if (testX.intersects(box)) {
+                blockedX = true;
+                break;
+            }
+        }
+        if (!blockedX) setPosX(newX);
+
+        Rectangle testY = new Rectangle(
+            dimensions.x, (int) newY - boundsHeight / 2, boundsWidth, boundsHeight
+        );
+        boolean blockedY = false;
+        for (Rectangle box : World.currentPlayer.getHitboxes()) {
+            if (testY.intersects(box)) {
+                blockedY = true;
+                break;
+            }
+        }
+        if (!blockedY) setPosY(newY);
+
         dimensions.setBounds(
             (int) getPosX() - boundsWidth / 2,
             (int) getPosY() - boundsHeight / 2,

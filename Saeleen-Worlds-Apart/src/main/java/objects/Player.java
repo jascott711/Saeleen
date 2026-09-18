@@ -74,6 +74,10 @@ public class Player extends Npc implements ActionListener {
     private int boundsWidth = 30;
     private int boundsHeight = 30;
 
+    private float knockbackSpeed = 200;
+    private float knockbackVelX = 0;
+    private float knockbackVelY = 0;
+
     private String actionString = "Chill";
 
     public Animation animAttackUp = new Animation(), animAttackDown = new Animation(), animAttackLeft = new Animation(),
@@ -396,6 +400,12 @@ public class Player extends Npc implements ActionListener {
         float newX = posX + moveX * deltaTime;
         float newY = posY + moveY * deltaTime;
 
+        //knockback from taking damage (reuses the collision checks below)
+        newX += knockbackVelX * deltaTime;
+        newY += knockbackVelY * deltaTime;
+        knockbackVelX *= 0.8f;
+        knockbackVelY *= 0.8f;
+
         Rectangle testDimensionsX = new Rectangle(
             (int) newX - dimensions.width / 2, dimensions.y, dimensions.width, dimensions.height
         );
@@ -505,6 +515,14 @@ public class Player extends Npc implements ActionListener {
                         this.health -= ((Enemy)sprite).dmg;
                         isHit = true;
                         whenPlayerWasHit = System.nanoTime();
+
+                        float knockX = getPosX() - sprite.getPosX();
+                        float knockY = getPosY() - sprite.getPosY();
+                        float knockDist = (float) Math.sqrt(knockX * knockX + knockY * knockY);
+                        if (knockDist > 0) {
+                            knockbackVelX = (knockX / knockDist) * knockbackSpeed;
+                            knockbackVelY = (knockY / knockDist) * knockbackSpeed;
+                        }
                     }
                 }
                 if (inVisionOf(sprite)) {
@@ -525,7 +543,7 @@ public class Player extends Npc implements ActionListener {
             }
         } else if (isHit) {
             //set a 1 second timer for taking damage
-            if ((System.nanoTime() / 1000000000) > (whenPlayerWasHit / 1000000000) + 1) {
+            if ((System.nanoTime() / 1000000000) > (whenPlayerWasHit / 1000000000) + 0.5) {
                 isHit = false;
             }
         }
