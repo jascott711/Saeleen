@@ -3,9 +3,12 @@ package ui;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 
 import objects.Player;
-import world.World;
+import objects.abilities.Bolt;
+import objects.abilities.Bullet;
+import objects.abilities.Knife;
 
 /**
  * DisplayAbility
@@ -15,12 +18,17 @@ public class DisplayAbility extends PlayerStats {
     private String abilityString;
     private String nextAbilityString;
     private String prevAbilityString;
+    private Knife knife;
+    private Bolt bolt;
+    private BufferedImage abilityImage;
 
     public DisplayAbility(Player player) {
         super(player);
         abilityString = "Knife";
         nextAbilityString = "Bolt";
         prevAbilityString = "Bolt";
+        knife = new Knife(0, 0, 0);
+        bolt = new Bolt(0, 0, 0);
     }
 
     public Player getPlayer() {
@@ -36,10 +44,12 @@ public class DisplayAbility extends PlayerStats {
             abilityString = "Knife";
             prevAbilityString = "Bolt";
             nextAbilityString = "Bolt";
+            abilityImage = knife.animations[knife.currentAnimation].getImage();
         } else if (player.spellChoice == 1) {
             abilityString = "Bolt";
             prevAbilityString = "Knife";
             nextAbilityString = "Knife";
+            abilityImage = bolt.animations[bolt.currentAnimation].getImage();
         }
     }
 
@@ -61,10 +71,12 @@ public class DisplayAbility extends PlayerStats {
         g.drawString("Ability", rect.x + rect.width + 12, rect.y + lineHeight);
         g.setFont( new Font("Tahoma", Font.ITALIC, FontSize));
         g.drawString(abilityString, rect.x + rect.width + 12, rect.y + lineHeight * 2);
-        g.setFont( new Font("Tahoma", Font.BOLD, FontSize));
-        g.drawString("Coins", rect.x + rect.width + 12, rect.y + lineHeight * 3);
-        g.setFont( new Font("Tahoma", Font.PLAIN, FontSize));
-        g.drawString("$"+World.currentPlayer.playerGold, rect.x + rect.width + 12, rect.y + (int)(lineHeight * 4));
+        //selected ability icon
+        if (abilityImage != null) {
+            BufferedImage rotated = Bullet.rotate(abilityImage, Math.toRadians(90));
+            int iconWidth = (player.spellChoice == 1) ? 24 : 20;
+            g.drawImage(rotated, rect.x + rect.width + 22, rect.y + lineHeight * 3 - 8, iconWidth, 30, null);
+        }
         
     }
     

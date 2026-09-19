@@ -16,7 +16,6 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
-import game.App;
 import graphics.Animation;
 import graphics.Renderer;
 import input.Input;
@@ -715,9 +714,10 @@ public class Player extends Npc implements ActionListener {
                 showVision = true;
             }
         }
-        // Exit game
+        // Pause menu
         if (Input.getKeyDown(KeyEvent.VK_ESCAPE)) {
-            App.quit();
+            World.mainMenu.openPause();
+            World.inMenu = true;
         }
     }
 

@@ -1,11 +1,13 @@
 package world;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import graphics.Renderer;
+import input.Input;
 import objects.Mob;
 import objects.Player;
 import objects.Sprite;
@@ -21,6 +23,10 @@ import ui.*;
 public class World {
     public static World currentWorld = null;
     public static Player currentPlayer = new objects.Player(1000,1200);
+
+    public static ui.Menu mainMenu = new ui.Menu();
+    public static boolean inMenu = true;
+    public static boolean showStats = false;
 
     private static long lastTime = System.nanoTime();
 
@@ -45,6 +51,25 @@ public class World {
     public static void update() {
         float deltaTime = (System.nanoTime() - lastTime) / 1000000000.0f;
         lastTime = System.nanoTime();
+
+        if (inMenu) {
+            mainMenu.update(deltaTime);
+            return;
+        }
+
+        //TAB toggles the stats screen
+        if (Input.getKeyDown(KeyEvent.VK_TAB)) {
+            showStats = !showStats;
+            return;
+        }
+
+        //while the stats screen is open the game is paused, ESC closes it
+        if (showStats) {
+            if (Input.getKeyDown(KeyEvent.VK_ESCAPE)) {
+                showStats = false;
+            }
+            return;
+        }
 
         currentPlayer.update(deltaTime);
 
@@ -93,6 +118,11 @@ public class World {
     }
 
     public static void render(Graphics g) {
+        if (inMenu) {
+            mainMenu.render(g);
+            return;
+        }
+
         if (backdrop != null) {
             int x = backdropX - (int) Renderer.camX;
             int y = backdropY - (int) Renderer.camY;

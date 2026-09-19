@@ -49,6 +49,10 @@ public class Enemy extends Npc {
     public boolean isPlayerInVision = false;
     public boolean isHit = false;
 
+    private boolean isReturningToStart = false;
+
+    public Rectangle outerVision;
+
     private long whenPlayerWasHit;
     private long ellapsedPlayerHitTime;
 
@@ -68,6 +72,7 @@ public class Enemy extends Npc {
         height = 64;
         dimensions = new Rectangle(0, 0, boundsWidth, boundsHeight);
         vision = new Rectangle((int) posX - width, (int) posY - height, width * 4, height * 4);
+        outerVision = new Rectangle((int) posX - width * 6, (int) posY - height * 6, width * 12, height * 12);
 
         showDimensions = true;
         showVision = true;
@@ -204,6 +209,19 @@ public class Enemy extends Npc {
         this.xpGiven = xpGiven;
     }
 
+    public float getStartPosX() {
+        return this.startPosX;
+    }
+
+    public float getStartPosY() {
+        return this.startPosY;
+    }
+
+    public void setStartPos(float startPosX, float startPosY) {
+        this.startPosX = startPosX;
+        this.startPosY = startPosY;
+    }
+
 
 
     public void killCheck() {
@@ -249,6 +267,8 @@ public class Enemy extends Npc {
         float moveY = 0;
         float moveX = 0;
 
+        boolean wasPlayerInVision = isPlayerInVision;
+
         int visionWidth = (int)(vision.width * 1.5);
         int visionHeight = (int)(vision.height * 1.5);
         Rectangle visionArea = new Rectangle(
@@ -258,24 +278,73 @@ public class Enemy extends Npc {
         );
         isPlayerInVision = isPlayerInVision || visionArea.intersects(World.currentPlayer.getDimensions());
 
-        if (!isPlayerInVision) {
-            //default walking pattern
-            if ((posX > startPosX - 800) && isWalkingLeft) {
-                isWalkingRight = false;
-                moveX -= runSpeed;
-                currentAnimation = 0;
-                animations[currentAnimation].playAnimation();
-            } else {
-                isWalkingRight = true;
-            }
+        //once the player leaves the outer vision, stop chasing
+        outerVision.x = (int) getPosX() - outerVision.width / 2;
+        outerVision.y = (int) getPosY() - outerVision.height / 2;
+        if (!outerVision.intersects(World.currentPlayer.getDimensions())) {
+            isPlayerInVision = false;
+        }
 
-            if ((posX < startPosX + 800) && isWalkingRight) {
-                isWalkingLeft = false;
-                moveX += runSpeed;
-                currentAnimation = 1;
-                animations[currentAnimation].playAnimation();
+        //lost sight of the player, walk back to the starting position
+        if (wasPlayerInVision && !isPlayerInVision) {
+            isReturningToStart = true;
+        }
+
+        if (!isPlayerInVision) {
+
+            if (isReturningToStart) {
+                //walk back to starting position
+                float deltaX = startPosX - posX;
+                float deltaY = startPosY - posY;
+
+                if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                        if (deltaX < 0) {
+                            moveX -= runSpeed;
+                            currentAnimation = 0;
+                        } else {
+                            moveX += runSpeed;
+                            currentAnimation = 1;
+                        }
+                    } else {
+                        if (deltaY < 0) {
+                            moveY -= runSpeed;
+                            currentAnimation = 2;
+                        } else {
+                            moveY += runSpeed;
+                            currentAnimation = 3;
+                        }
+                    }
+                    animations[currentAnimation].playAnimation();
+                } else {
+                    //reached the starting position, begin the walk pattern anew
+                    setPosX(startPosX);
+                    setPosY(startPosY);
+                    isReturningToStart = false;
+                    isWalkingLeft = true;
+                    isWalkingRight = false;
+                    currentAnimation = 0;
+                }
+
             } else {
-                isWalkingLeft = true;
+                //default walking pattern
+                if ((posX > startPosX - 800) && isWalkingLeft) {
+                    isWalkingRight = false;
+                    moveX -= runSpeed;
+                    currentAnimation = 0;
+                    animations[currentAnimation].playAnimation();
+                } else {
+                    isWalkingRight = true;
+                }
+
+                if ((posX < startPosX + 800) && isWalkingRight) {
+                    isWalkingLeft = false;
+                    moveX += runSpeed;
+                    currentAnimation = 1;
+                    animations[currentAnimation].playAnimation();
+                } else {
+                    isWalkingLeft = true;
+                }
             }
 
         } else {
@@ -405,6 +474,12 @@ public class Enemy extends Npc {
 
         vision.x = realX - vision.width / 3;
         vision.y = realY - vision.height / 3;
+
+        //draw outer vision bounds
+        if (showVision) {
+            g.setColor(Color.BLUE);
+            g.drawRect(realX + image.getWidth() / 2 - outerVision.width / 2, realY + image.getHeight() / 2 - outerVision.height / 2, outerVision.width, outerVision.height);
+        }
 
         //draw sprite
         g.drawImage(image, realX, realY, image.getWidth(), image.getHeight(), null);

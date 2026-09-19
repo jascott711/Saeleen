@@ -213,7 +213,7 @@ public class Sprite {
         if (showVision) {
             //draw sprite vision for collision detection
             g.setColor(Color.YELLOW);
-            g.drawRect(realX - vision.width / 2, realY - vision.height / 2, (int)(vision.width * 1.5), (int)(vision.height * 1.5));
+            g.drawRect(realX + image.getWidth() / 2 - (int)(vision.width * 1.5) / 2, realY + image.getHeight() / 2 - (int)(vision.height * 1.5) / 2, (int)(vision.width * 1.5), (int)(vision.height * 1.5));
         }
 
         if(this instanceof Player){

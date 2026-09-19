@@ -112,6 +112,28 @@ public class Renderer {
         frame.setVisible(true);
         canvas.createBufferStrategy(3);
         canvas.addKeyListener(new Input());
+
+        //stop TAB from moving focus instead of reaching the KeyListener
+        frame.setFocusTraversalKeysEnabled(false);
+        canvas.setFocusTraversalKeysEnabled(false);
+
+        canvas.requestFocus();
+        frame.requestFocus();
+
+        Thread focusThread = new Thread() {
+            public void run() {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                frame.toFront();
+                frame.requestFocus();
+                canvas.requestFocus();
+            }
+        };
+        focusThread.setName("Focus");
+        focusThread.start();
     }
 
     public static void start() {

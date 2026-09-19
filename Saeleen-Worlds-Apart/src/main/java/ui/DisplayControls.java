@@ -39,7 +39,7 @@ public class DisplayControls extends UIComponent {
         //styles
         ArrayList<String> controls = new ArrayList<String>();
         controls.add("Controls");
-        controls.add("ESC - Quit");
+        controls.add("ESC - Menu");
         controls.add("W A S D - Move");
         controls.add("Hold Shift - Run");
         controls.add("L - Attack");

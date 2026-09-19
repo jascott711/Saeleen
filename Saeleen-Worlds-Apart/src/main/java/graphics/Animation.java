@@ -3,6 +3,8 @@ package graphics;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import world.World;
+
 /**
  * Animation
  */
@@ -46,6 +48,10 @@ public class Animation {
 
 
     public void playAnimation () {
+        if (World.showStats) {
+            return;
+        }
+
         if (System.nanoTime() > lastTime + (1000000000) / fps) {
             currentImage++;
             if (currentImage >= images.size()) {
@@ -55,6 +61,10 @@ public class Animation {
         }
     }
     public void playAnimationOnce () {
+        if (World.showStats) {
+            return;
+        }
+
         if (System.nanoTime() > lastTime + (1000000000) / fps) {
             currentImage++;
             if (currentImage >= images.size()) {

@@ -9,9 +9,11 @@ import objects.impassable.Iob;
 import objects.items.Apple;
 import objects.items.Item;
 import objects.items.ManaPotion;
+
 import objects.npcs.aggressive.Soldier;
 import objects.npcs.passive.Tatem;
 import ui.*;
+import world.SaveGame;
 import world.World;
 
 /**
@@ -21,6 +23,12 @@ public final class App {
 
     public App() {
         Renderer.init();
+
+        Renderer.start();
+    }
+
+    public static void startNewGame() {
+        resetPlayer();
 
         try {
             World.currentWorld = new world.World();
@@ -57,8 +65,8 @@ public final class App {
             //add UI
             UIComponent[] uicomponents = {
                 new PlayerStats(World.currentPlayer), new HealthBar(World.currentPlayer), new ManaBar(World.currentPlayer),
-                new ExperienceBar(World.currentPlayer), new DisplayControls(World.currentPlayer), new DisplayAbility(World.currentPlayer),
-                new DisplayItems(World.currentPlayer)
+                new ExperienceBar(World.currentPlayer), new DisplayAbility(World.currentPlayer),
+                new DisplayItems(World.currentPlayer), new StatsScreen(World.currentPlayer)
             };
             for (UIComponent uicomponent : uicomponents) {
                 World.currentWorld.uicomponents.add(uicomponent);
@@ -67,8 +75,27 @@ public final class App {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
-        Renderer.start();
+    public static void loadGame(int slot) {
+        startNewGame();
+        SaveGame.load(slot);
+    }
+
+    private static void resetPlayer() {
+        Player player = World.currentPlayer;
+        player.setPosX(1000);
+        player.setPosY(1200);
+        player.health = player.maxHealth;
+        player.mana = player.maxMana;
+        player.level = 1;
+        player.experience = 0;
+        player.xpToLevel = 100;
+        player.playerGold = 0;
+        player.myItems.clear();
+        player.direction = 0;
+        player.isHit = false;
+        player.isInChat = false;
     }
 
 	public static void quit() {
