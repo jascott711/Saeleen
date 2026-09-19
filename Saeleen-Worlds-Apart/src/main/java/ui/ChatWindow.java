@@ -31,6 +31,12 @@ public class ChatWindow extends UIComponent {
     int containerHeight;
     int borderRadius = 20;
     Rectangle rect;    
+    private int lastLineIndex = -1;
+    private float typeTimer = 0;
+    private int typedChars = 0;
+    private String typeLine = "";
+    private float blinkTimer = 0;
+    private boolean blinkVisible = true;    
 
     public ChatWindow(Player player, Mob object) {
         this.player = player;
@@ -53,7 +59,31 @@ public class ChatWindow extends UIComponent {
     }
     
     public void update (float deltaTime) {
+        Npc npc = (Npc) object;
 
+        int lineIndex = npc.conversationLine;
+        if (lineIndex != lastLineIndex) {
+            lastLineIndex = lineIndex;
+            typeTimer = 0;
+            typedChars = 0;
+            blinkTimer = 0;
+            blinkVisible = true;
+            typeLine = (lineIndex >= 0 && lineIndex < speech.size()) ? speech.get(lineIndex) : "";
+        }
+
+        if (typedChars < typeLine.length()) {
+            typeTimer += deltaTime;
+            typedChars = (int) (typeTimer / Menu.textSpeedSeconds() * typeLine.length());
+            if (typedChars > typeLine.length()) {
+                typedChars = typeLine.length();
+            }
+        } else if (typeLine.length() > 0) {
+            blinkTimer += deltaTime;
+            if (blinkTimer > 0.5f) {
+                blinkVisible = !blinkVisible;
+                blinkTimer -= 0.5f;
+            }
+        }
     }
 
     @Override
@@ -92,7 +122,7 @@ public class ChatWindow extends UIComponent {
         //speaker name
         g.setColor(Color.WHITE);
         g.setFont( new Font("Tahoma", Font.BOLD, titleFontSize));
-        g.drawString(speaker, rect.x + 10, rect.y + lineHeight - 4);
+        g.drawString(speaker, rect.x + 10, rect.y + lineHeight + 2);
         //line
         if (npc.inStory) {
             g.setColor(new Color(255, 182, 193)); //light pink
@@ -100,7 +130,22 @@ public class ChatWindow extends UIComponent {
             g.setColor(Color.WHITE);
         }
         g.setFont( new Font("Tahoma", Font.PLAIN, FontSize));
-        g.drawString(text, rect.x + 10, rect.y + lineHeight * 2);
+        String typedText;
+        if (text.length() > typedChars) {
+            typedText = text.substring(0, typedChars);
+        } else {
+            typedText = text;
+        }
+        g.drawString(typedText, rect.x + 10, rect.y + lineHeight * 2);
+
+        //flashing double arrow when line is fully typed
+        if (typedChars >= text.length() && text.length() > 0 && blinkVisible) {
+            g.setColor(new Color(230, 240, 85));
+            g.setFont(new Font("Tahoma", Font.BOLD, FontSize));
+            String arrow = "\u00BB\u00BB";
+            int arrowWidth = g.getFontMetrics().stringWidth(arrow);
+            g.drawString(arrow, rect.x + rect.width - arrowWidth - 10, rect.y + lineHeight * 2);
+        }
 
     }
 

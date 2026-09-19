@@ -27,8 +27,11 @@ public class Menu extends UIComponent {
 
     private static final String[] MAIN_OPTIONS = { "New Game", "Continue", "Load Games", "Settings", "Quit" };
     private static final String[] LOAD_OPTIONS = { "Slot 1", "Slot 2", "Slot 3", "Back" };
-    private static final String[] SETTINGS_OPTIONS = { "Back" };
-    private static final String[] PAUSE_OPTIONS = { "Resume", "Controls", "Load Game", "Save Game", "Quit" };
+    private static final String[] SETTINGS_OPTIONS = { "Text Speed", "Back" };
+    private static final String[] TEXT_SPEEDS = { "Slow", "Medium", "Fast" };
+    private static final float[] TEXT_SPEED_SECONDS = { 1.0f, 0.5f, 0.25f };
+    public static int textSpeed = 1; // default Medium
+    private static final String[] PAUSE_OPTIONS = { "Resume", "Controls", "Settings", "Load Game", "Save Game", "Quit" };
     private static final String[] SAVE_OPTIONS = { "Slot 1", "Slot 2", "Slot 3", "Back" };
     private static final String[] SAVE_CONFIRM_OPTIONS = { "Save", "Save and Quit", "Cancel" };
     private static final String[] CONTROLS_OPTIONS = { "Back" };
@@ -46,6 +49,9 @@ public class Menu extends UIComponent {
     private int selection = 0;
     private int pendingSlot = 0;
     private int returnScreen = SCREEN_MAIN;
+    private int settingsOriginalSpeed = textSpeed;
+    private boolean settingsConfirm = false;
+    private int settingsDialogSelection = 0;
 
     private String[] getOptions() {
         if (screen == SCREEN_LOAD) return LOAD_OPTIONS;
@@ -57,6 +63,10 @@ public class Menu extends UIComponent {
         return MAIN_OPTIONS;
     }
 
+    public static float textSpeedSeconds() {
+        return TEXT_SPEED_SECONDS[textSpeed];
+    }
+
     public void openPause() {
         screen = SCREEN_PAUSE;
         selection = 0;
@@ -64,6 +74,54 @@ public class Menu extends UIComponent {
 
     @Override
     public void update(float deltaTime) {
+        if (screen == SCREEN_SETTINGS) {
+            if (settingsConfirm) {
+                if (Input.getKeyDown(KeyEvent.VK_RIGHT) || Input.getKeyDown(KeyEvent.VK_D)) {
+                    settingsDialogSelection = (settingsDialogSelection + 1) % 2;
+                } else if (Input.getKeyDown(KeyEvent.VK_LEFT) || Input.getKeyDown(KeyEvent.VK_A)) {
+                    settingsDialogSelection = (settingsDialogSelection + 1) % 2;
+                } else if (Input.getKeyDown(KeyEvent.VK_ENTER) || Input.getKeyDown(KeyEvent.VK_SPACE)) {
+                    if (settingsDialogSelection == 0) {
+                        settingsConfirm = false;
+                        screen = returnScreen;
+                        selection = 0;
+                    } else {
+                        textSpeed = settingsOriginalSpeed;
+                        settingsConfirm = false;
+                    }
+                } else if (Input.getKeyDown(KeyEvent.VK_ESCAPE)) {
+                    textSpeed = settingsOriginalSpeed;
+                    settingsConfirm = false;
+                }
+                return;
+            }
+
+            if (Input.getKeyDown(KeyEvent.VK_RIGHT) || Input.getKeyDown(KeyEvent.VK_D)) {
+                textSpeed++;
+                if (textSpeed >= TEXT_SPEEDS.length) {
+                    textSpeed = 0;
+                }
+            } else if (Input.getKeyDown(KeyEvent.VK_LEFT) || Input.getKeyDown(KeyEvent.VK_A)) {
+                textSpeed--;
+                if (textSpeed < 0) {
+                    textSpeed = TEXT_SPEEDS.length - 1;
+                }
+            } else if (Input.getKeyDown(KeyEvent.VK_ENTER) || Input.getKeyDown(KeyEvent.VK_SPACE)) {
+                if (textSpeed != settingsOriginalSpeed) {
+                    settingsDialogSelection = 0;
+                    settingsConfirm = true;
+                } else {
+                    screen = returnScreen;
+                    selection = 0;
+                }
+            } else if (Input.getKeyDown(KeyEvent.VK_ESCAPE)) {
+                textSpeed = settingsOriginalSpeed;
+                screen = returnScreen;
+                selection = 0;
+            }
+            return;
+        }
+
         String[] options = getOptions();
 
         if (Input.getKeyDown(KeyEvent.VK_UP) || Input.getKeyDown(KeyEvent.VK_W)) {
@@ -99,6 +157,8 @@ public class Menu extends UIComponent {
             } else if (selection == 3) {
                 screen = SCREEN_SETTINGS;
                 selection = 0;
+                settingsOriginalSpeed = textSpeed;
+                settingsConfirm = false;
             } else if (selection == 4) {
                 App.quit();
             }
@@ -111,10 +171,8 @@ public class Menu extends UIComponent {
                 World.inMenu = false;
             }
         } else if (screen == SCREEN_SETTINGS) {
-            if (selection == SETTINGS_OPTIONS.length - 1) {
-                screen = SCREEN_MAIN;
-                selection = 0;
-            }
+            screen = returnScreen;
+            selection = 0;
         } else if (screen == SCREEN_PAUSE) {
             if (selection == 0) {
                 World.inMenu = false;
@@ -123,12 +181,18 @@ public class Menu extends UIComponent {
                 selection = 0;
             } else if (selection == 2) {
                 returnScreen = SCREEN_PAUSE;
+                screen = SCREEN_SETTINGS;
+                selection = 0;
+                settingsOriginalSpeed = textSpeed;
+                settingsConfirm = false;
+            } else if (selection == 3) {
+                returnScreen = SCREEN_PAUSE;
                 screen = SCREEN_LOAD;
                 selection = 0;
-            } else if (selection == 3) {
+            } else if (selection == 4) {
                 screen = SCREEN_SAVE;
                 selection = 0;
-            } else if (selection == 4) {
+            } else if (selection == 5) {
                 App.quit();
             }
         } else if (screen == SCREEN_CONTROLS) {
@@ -235,6 +299,84 @@ public class Menu extends UIComponent {
             return;
         }
 
+        if (screen == SCREEN_SETTINGS) {
+            int labelY = Renderer.gameHeight / 2;
+
+            g.setFont(new Font("Tahoma", Font.PLAIN, 28));
+            g.setColor(Color.WHITE);
+            int labelWidth = g.getFontMetrics().stringWidth("Text Speed:");
+            g.drawString("Text Speed:", centerX - labelWidth / 2, labelY);
+
+            int rowY = labelY + 26;
+            int spacing = 24;
+            g.setFont(new Font("Tahoma", Font.PLAIN, 16));
+
+            int totalWidth = spacing * (TEXT_SPEEDS.length - 1);
+            for (int i = 0; i < TEXT_SPEEDS.length; i++) {
+                totalWidth += g.getFontMetrics().stringWidth(TEXT_SPEEDS[i]);
+            }
+            int cursor = centerX - totalWidth / 2;
+            int[] optionCenterX = new int[TEXT_SPEEDS.length];
+            for (int i = 0; i < TEXT_SPEEDS.length; i++) {
+                g.setColor(Color.WHITE);
+                int textWidth = g.getFontMetrics().stringWidth(TEXT_SPEEDS[i]);
+                optionCenterX[i] = cursor + textWidth / 2;
+                g.drawString(TEXT_SPEEDS[i], cursor, rowY);
+                cursor += textWidth + spacing;
+            }
+
+            //arrow under the chosen option
+            g.setColor(new Color(230, 240, 85));
+            String arrow = "\u25B2";
+            int arrowX = optionCenterX[textSpeed];
+            int arrowWidth = g.getFontMetrics().stringWidth(arrow);
+            g.drawString(arrow, arrowX - arrowWidth / 2, rowY + 20);
+
+            if (settingsConfirm) {
+                g.setFont(new Font("Tahoma", Font.BOLD, 16));
+                g.setColor(Color.WHITE);
+                String saveLabel = "Save Changes?";
+                int saveWidth = g.getFontMetrics().stringWidth(saveLabel);
+                int saveY = rowY + 44;
+                g.drawString(saveLabel, centerX - saveWidth / 2, saveY);
+
+                g.setFont(new Font("Tahoma", Font.PLAIN, 16));
+                String[] confirmOptions = { "Accept", "Cancel" };
+                int confirmRowY = saveY + 24;
+                int confirmTotalWidth = 20 * (confirmOptions.length - 1);
+                for (int i = 0; i < confirmOptions.length; i++) {
+                    confirmTotalWidth += g.getFontMetrics().stringWidth(confirmOptions[i]);
+                }
+                int confirmCursor = centerX - confirmTotalWidth / 2;
+                int[] confirmCenterX = new int[confirmOptions.length];
+                for (int i = 0; i < confirmOptions.length; i++) {
+                    g.setColor(Color.WHITE);
+                    int tWidth = g.getFontMetrics().stringWidth(confirmOptions[i]);
+                    confirmCenterX[i] = confirmCursor + tWidth / 2;
+                    g.drawString(confirmOptions[i], confirmCursor, confirmRowY);
+                    confirmCursor += tWidth + 20;
+                }
+
+                g.setColor(new Color(230, 240, 85));
+                String confirmArrow = "\u25B2";
+                int confirmArrowWidth = g.getFontMetrics().stringWidth(confirmArrow);
+                int confirmArrowX = confirmCenterX[settingsDialogSelection];
+                g.drawString(confirmArrow, confirmArrowX - confirmArrowWidth / 2, confirmRowY + 18);
+
+                g.setColor(Color.GRAY);
+                String hint = "Left/Right to choose, Enter to apply, ESC to cancel";
+                int hintWidth = g.getFontMetrics().stringWidth(hint);
+                g.drawString(hint, centerX - hintWidth / 2, Renderer.gameHeight - 40);
+            } else {
+                g.setColor(Color.GRAY);
+                g.setFont(new Font("Tahoma", Font.PLAIN, 16));
+                String hint = "Left/Right to change, Enter to apply, ESC to go back";
+                int hintWidth = g.getFontMetrics().stringWidth(hint);
+                g.drawString(hint, centerX - hintWidth / 2, Renderer.gameHeight - 40);
+            }
+            return;
+        }
+
         String[] options = getOptions();
         int optionHeight = 40;
         int startY = Renderer.gameHeight / 2 - (options.length / 2) * optionHeight + 20;
@@ -270,8 +412,12 @@ public class Menu extends UIComponent {
                 g.setColor(Color.WHITE);
             }
 
-            int textWidth = g.getFontMetrics().stringWidth(options[i]);
-            g.drawString(options[i], centerX - textWidth / 2, y);
+            String label = options[i];
+            if (screen == SCREEN_SETTINGS && i == 0) {
+                label = "Text Speed: " + TEXT_SPEEDS[textSpeed];
+            }
+            int textWidth = g.getFontMetrics().stringWidth(label);
+            g.drawString(label, centerX - textWidth / 2, y);
         }
 
         g.setFont(new Font("Tahoma", Font.PLAIN, 16));

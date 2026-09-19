@@ -71,8 +71,8 @@ public class Npc extends Mob {
                 conversation = storyBlocks.get(storyIndex);
                 storyIndex++;
                 inStory = true;
-            } else if (!dialogBlocks.isEmpty()) {
-                conversation = dialogBlocks.get(dialogIndex % dialogBlocks.size());
+            } else if (dialogIndex < dialogBlocks.size()) {
+                conversation = dialogBlocks.get(dialogIndex);
                 dialogIndex++;
                 inStory = false;
             } else {
@@ -87,13 +87,13 @@ public class Npc extends Mob {
                     conversation = storyBlocks.get(storyIndex);
                     storyIndex++;
                     conversationLine = 0;
-                } else if (!dialogBlocks.isEmpty()) {
-                    conversation = dialogBlocks.get(dialogIndex % dialogBlocks.size());
+                } else if (!inStory && dialogIndex < dialogBlocks.size()) {
+                    conversation = dialogBlocks.get(dialogIndex);
                     dialogIndex++;
-                    inStory = false;
                     conversationLine = 0;
                 } else {
                     inConversation = false;
+                    dialogIndex = 0;
                     return;
                 }
             }
