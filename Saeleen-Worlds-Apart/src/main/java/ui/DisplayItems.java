@@ -22,7 +22,7 @@ public class DisplayItems extends PlayerStats {
 
     public DisplayItems(Player player) {
         super(player);
-        rect = new Rectangle((Renderer.gameWidth+250) / 2, Renderer.gameHeight - 86, ((itemIconWidth + 2) * (itemCountMax / 2)) + 14, (itemIconHeight * (itemCountMax / 3)) + 36);
+        rect = new Rectangle((Renderer.gameWidth+250) / 2 + 61, Renderer.gameHeight - 86, ((itemIconWidth + 2) * (itemCountMax / 2)) + 14, (itemIconHeight * (itemCountMax / 3)) + 36);
 
     }
 

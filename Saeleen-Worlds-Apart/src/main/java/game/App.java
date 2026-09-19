@@ -66,6 +66,7 @@ public final class App {
             UIComponent[] uicomponents = {
                 new PlayerStats(World.currentPlayer), new HealthBar(World.currentPlayer), new ManaBar(World.currentPlayer),
                 new ExperienceBar(World.currentPlayer), new DisplayAbility(World.currentPlayer),
+                new DisplayAbility2(World.currentPlayer),
                 new DisplayItems(World.currentPlayer), new StatsScreen(World.currentPlayer)
             };
             for (UIComponent uicomponent : uicomponents) {

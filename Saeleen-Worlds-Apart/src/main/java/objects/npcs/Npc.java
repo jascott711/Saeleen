@@ -38,6 +38,14 @@ public class Npc extends Mob {
     public BufferedImage playerChatImage = null;
     public BufferedImage objectChatImage = null;
     public int chatSequenceStep = 0;
+    public ArrayList<ArrayList<String>> dialogBlocks = new ArrayList<ArrayList<String>>();
+    public int dialogIndex = 0;
+    public ArrayList<ArrayList<String>> storyBlocks = new ArrayList<ArrayList<String>>();
+    public int storyIndex = 0;
+    public boolean inStory = false;
+    public int conversationLine = 0;
+    public boolean inConversation = false;
+    public String npcName = "";
 
 
     public Animation[] animationsTakeDamage;
@@ -51,26 +59,59 @@ public class Npc extends Mob {
         isSolid = true;
     }
 
-    //get and draw chat window
+//get and draw chat window
     public void speak() {
-        if (playerChatImage == null || objectChatImage == null) {
-            //System.out.println("Can't draw Player or Object chat image");
-            //return;
+        if (newCW != null) {
+            World.currentWorld.uicomponents.remove(newCW);
+            newCW = null;
         }
 
-        chatSequenceStep++;
-        if (chatSequenceStep > conversation.size() + 1) {
-            return;            
+        if (!inConversation) {
+            if (storyIndex < storyBlocks.size()) {
+                conversation = storyBlocks.get(storyIndex);
+                storyIndex++;
+                inStory = true;
+            } else if (!dialogBlocks.isEmpty()) {
+                conversation = dialogBlocks.get(dialogIndex % dialogBlocks.size());
+                dialogIndex++;
+                inStory = false;
+            } else {
+                return;
+            }
+            conversationLine = 0;
+            inConversation = true;
+        } else {
+            conversationLine++;
+            if (conversationLine >= conversation.size()) {
+                if (inStory && storyIndex < storyBlocks.size()) {
+                    conversation = storyBlocks.get(storyIndex);
+                    storyIndex++;
+                    conversationLine = 0;
+                } else if (!dialogBlocks.isEmpty()) {
+                    conversation = dialogBlocks.get(dialogIndex % dialogBlocks.size());
+                    dialogIndex++;
+                    inStory = false;
+                    conversationLine = 0;
+                } else {
+                    inConversation = false;
+                    return;
+                }
+            }
         }
 
-        newCW = new ChatWindow(World.currentPlayer,this);
+        newCW = new ChatWindow(World.currentPlayer, this);
         World.currentWorld.uicomponents.add(newCW);
 
-    }  
+    }
 
     public void clearSpeak() {
         chatSequenceStep = 0;
-        World.currentWorld.uicomponents.remove(newCW);
+        conversationLine = 0;
+        inConversation = false;
+        if (newCW != null) {
+            World.currentWorld.uicomponents.remove(newCW);
+            newCW = null;
+        }
     }
 
     // public void drawAction(Graphics g, String actionString) {

@@ -4,13 +4,13 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 import graphics.Renderer;
 import objects.Mob;
 import objects.Player;
 import objects.npcs.Npc;
-import world.World;
 
 /**
  * ChatWindow
@@ -36,9 +36,11 @@ public class ChatWindow extends UIComponent {
         this.player = player;
         this.object = object;
 
-        speech.add("Hi");
-        containerWidth = Renderer.gameWidth / 4;
-        containerHeight = cellHeight * speech.size() + 10;
+        if (object instanceof Npc) {
+            speech = ((Npc) object).conversation;
+        }
+        containerWidth = Renderer.gameWidth / 3;
+        containerHeight = lineHeight * 2 + 12;
         rect = new Rectangle((Renderer.gameWidth / 2) - (containerWidth / 2), Renderer.gameHeight / 2 + 50,  containerWidth, containerHeight);      
     }
 
@@ -56,42 +58,50 @@ public class ChatWindow extends UIComponent {
 
     @Override
     public void render(Graphics g) {
-        //controls
-        
-        for (Npc sprite : World.currentWorld.npcSprites) {
-            if (World.currentPlayer.inVisionOf(sprite) && sprite.chatSequenceStep <= sprite.conversation.size() + 1) {
-                playerChatWindow(g);
-            } else {
-                g.dispose();
-            }
-        }
-        
-    }
-
-    public void objectChatWindow(Graphics g) {
-        
+        playerChatWindow(g);
     }
 
     public void playerChatWindow(Graphics g) {
-        //draw sprite
-        g.drawImage(player.playerChatImage, rect.x - player.playerChatImage.getWidth() / 2, rect.y - player.playerChatImage.getHeight() / 2, player.playerChatImage.getWidth(), player.playerChatImage.getHeight(), null);
+        Npc npc = (Npc) object;
+
+        int lineIndex = npc.conversationLine;
+        String line = (lineIndex >= 0 && lineIndex < speech.size()) ? speech.get(lineIndex) : "";
+        String speaker = npc.npcName;
+        String text = line;
+        if (line.startsWith("C:")) {
+            speaker = "Clara";
+            text = line.substring(2).trim();
+        }
+
+        //draw speaker sprite
+        BufferedImage speakerImage = null;
+        if (speaker.equals("Clara")) {
+            speakerImage = player.playerChatImage;
+        } else {
+            speakerImage = npc.objectChatImage;
+        }
+        if (speakerImage != null) {
+            g.drawImage(speakerImage, rect.x - speakerImage.getWidth() / 2, rect.y - speakerImage.getHeight() / 2, speakerImage.getWidth(), speakerImage.getHeight(), null);
+        }
 
         //draw container
         g.setColor(Color.WHITE);
         g.fillRoundRect(rect.x, rect.y, rect.width, rect.height, borderRadius, borderRadius);
         g.setColor(new Color(25,25,25)); //black #191919;
         g.fillRoundRect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2, borderRadius, borderRadius);
-        //text
+        //speaker name
         g.setColor(Color.WHITE);
         g.setFont( new Font("Tahoma", Font.BOLD, titleFontSize));
-        g.drawString("Clara", rect.x, rect.y + lineHeight - 30);
-        for (int i = 0; i < speech.size(); i++) {
-            g.setFont( new Font("Tahoma", Font.PLAIN, FontSize));
-            g.drawString(speech.get(i), rect.x + 10, rect.y + lineHeight + (cellHeight * i ));
-            
+        g.drawString(speaker, rect.x + 10, rect.y + lineHeight - 4);
+        //line
+        if (npc.inStory) {
+            g.setColor(new Color(255, 182, 193)); //light pink
+        } else {
+            g.setColor(Color.WHITE);
         }
+        g.setFont( new Font("Tahoma", Font.PLAIN, FontSize));
+        g.drawString(text, rect.x + 10, rect.y + lineHeight * 2);
 
     }
-
 
 }

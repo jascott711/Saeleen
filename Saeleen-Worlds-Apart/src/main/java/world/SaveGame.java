@@ -71,6 +71,7 @@ public class SaveGame {
         props.setProperty("abilitySlots", String.valueOf(player.abilitySlots));
         props.setProperty("openstMSlots", String.valueOf(player.openstMSlots));
         props.setProperty("spellChoice", String.valueOf(player.spellChoice));
+        props.setProperty("spellChoice2", String.valueOf(player.spellChoice2));
 
         StringBuilder items = new StringBuilder();
         for (Item item : player.myItems) {
@@ -170,6 +171,7 @@ public class SaveGame {
         player.abilitySlots = Integer.parseInt(props.getProperty("abilitySlots", "0"));
         player.openstMSlots = Integer.parseInt(props.getProperty("openstMSlots", "1"));
         player.spellChoice = Integer.parseInt(props.getProperty("spellChoice", "0"));
+        player.spellChoice2 = Integer.parseInt(props.getProperty("spellChoice2", "0"));
 
         player.myItems.clear();
         String items = props.getProperty("items", "");

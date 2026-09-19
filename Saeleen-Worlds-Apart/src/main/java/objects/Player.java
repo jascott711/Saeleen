@@ -41,6 +41,10 @@ public class Player extends Npc implements ActionListener {
     public int maxMana = 50; // starting max mana
     public int mana = maxMana; // current mana
     public int spellChoice = 0;
+    public int spellChoice2 = 0;
+    private float manaDrainAccum = 0;
+    private float runTimer = 0;
+    private float runCooldown = 0;
 
     public int level = 1; // starting level
     public int experience = 0; // starting experience
@@ -298,15 +302,46 @@ public class Player extends Npc implements ActionListener {
         boolean isIntersectingIob = false;
         int stepback = 1;
 
-        if (Input.getKey(KeyEvent.VK_SHIFT) && !isIntersectingIob) {
+        float runDuration = 1.0f;
+        float runCooldownTime = 1.0f;
+
+        boolean isRunning = Input.getKey(KeyEvent.VK_SHIFT) && !isIntersectingIob && spellChoice2 == 0 && mana > 0 && runCooldown <= 0;
+
+        if (isRunning) {
             runSpeed = 600;
+            runTimer += deltaTime;
             for (Animation animation : animations) {
                 animation.setFps(16);
             }
         } else {
             runSpeed = 200;
+            runTimer = 0;
             for (Animation animation : animations) {
                 animation.setFps(8);
+            }
+        }
+        //running is Ability2 and consumes mana while active
+        if (isRunning) {
+            manaDrainAccum += 5 * deltaTime;
+            if (manaDrainAccum >= 1) {
+                int drain = (int) manaDrainAccum;
+                mana -= drain;
+                manaDrainAccum -= drain;
+                if (mana < 0) {
+                    mana = 0;
+                }
+            }
+            if (runTimer >= runDuration) {
+                runTimer = 0;
+                runCooldown = runCooldownTime;
+            }
+        } else {
+            manaDrainAccum = 0;
+            if (runCooldown > 0) {
+                runCooldown -= deltaTime;
+                if (runCooldown < 0) {
+                    runCooldown = 0;
+                }
             }
         }
         //
@@ -587,6 +622,20 @@ public class Player extends Npc implements ActionListener {
         	spellChoice++;
         	if(spellChoice > abilitySlots)	{
                 spellChoice = 0;
+            }
+        }
+
+        if (Input.getKeyDown(KeyEvent.VK_OPEN_BRACKET)) {
+        	spellChoice2--;
+        	if(spellChoice2 < 0)	{
+                spellChoice2 = abilitySlots;
+            }
+        }
+
+        if (Input.getKeyDown(KeyEvent.VK_CLOSE_BRACKET)) {
+        	spellChoice2++;
+        	if(spellChoice2 > abilitySlots)	{
+                spellChoice2 = 0;
             }
         }
 

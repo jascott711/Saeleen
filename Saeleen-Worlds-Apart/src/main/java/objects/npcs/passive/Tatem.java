@@ -46,8 +46,34 @@ public class Tatem extends Npc {
             anim
         };
 
-        playerSpeech.add("Hello");
-        playerSpeech.add("Where is Noah?");
+        npcName = "Tatem";
+
+        ArrayList<String> story = new ArrayList<String>();
+        story.add("Lorem ipsum dolor sit amet, consectetur");
+        story.add("C: dolor sit amet, consectetur?");
+        story.add("adipiscing elit, sed do eiusmod tempor");
+        storyBlocks.add(story);
+
+        ArrayList<String> storyFollowUp = new ArrayList<String>();
+        storyFollowUp.add("C: incididunt ut labore et dolore magna");
+        storyFollowUp.add("aliqua. Ut enim ad minim veniam");
+        storyFollowUp.add("C: quis nostrud exercitation?");
+        storyBlocks.add(storyFollowUp);
+
+        ArrayList<String> firstDialog = new ArrayList<String>();
+        firstDialog.add("Lorem ipsum dolor sit amet");
+        firstDialog.add("consectetur adipiscing elit");
+        dialogBlocks.add(firstDialog);
+
+        ArrayList<String> secondDialog = new ArrayList<String>();
+        secondDialog.add("Sed do eiusmod tempor incididunt");
+        secondDialog.add("ut labore et dolore magna aliqua");
+        dialogBlocks.add(secondDialog);
+
+        ArrayList<String> thirdDialog = new ArrayList<String>();
+        thirdDialog.add("Ut enim ad minim veniam");
+        thirdDialog.add("quis nostrud exercitation ullamco");
+        dialogBlocks.add(thirdDialog);
     }
 
     @Override
