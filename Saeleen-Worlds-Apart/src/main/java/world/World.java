@@ -28,6 +28,8 @@ public class World {
     public static boolean inMenu = true;
     public static boolean showStats = false;
 
+    public static float deathTimer = 0;
+
     private static long lastTime = System.nanoTime();
 
     public ArrayList<Sprite> sprites = new ArrayList<Sprite>();
@@ -54,6 +56,19 @@ public class World {
 
         if (inMenu) {
             mainMenu.update(deltaTime);
+            return;
+        }
+
+        //player death: show the death screen until the player presses enter, then return to the main menu
+        if (currentPlayer.health <= 0 && deathTimer == 0) {
+            deathTimer = 1;
+        }
+        if (deathTimer > 0) {
+            if (Input.getKeyDown(KeyEvent.VK_ENTER) || Input.getKeyDown(KeyEvent.VK_SPACE)) {
+                deathTimer = 0;
+                mainMenu.resetToMain();
+                inMenu = true;
+            }
             return;
         }
 
@@ -190,6 +205,26 @@ public class World {
         for (UIComponent uicomponent : currentWorld.uicomponents) {
             uicomponent.render(g);
         }
+
+        if (deathTimer > 0) {
+            g.setColor(new Color(25, 0, 0, 229));
+            g.fillRect(0, 0, Renderer.gameWidth, Renderer.gameHeight);
+
+            int centerX = Renderer.gameWidth / 2;
+            int centerY = Renderer.gameHeight / 2;
+
+            g.setFont(new Font("Tahoma", Font.BOLD, 96));
+            g.setColor(new Color(200, 30, 30));
+            String died = "YOU DIED";
+            int diedWidth = g.getFontMetrics().stringWidth(died);
+            g.drawString(died, centerX - diedWidth / 2, centerY - 40);
+
+            g.setFont(new Font("Tahoma", Font.PLAIN, 24));
+            g.setColor(Color.WHITE);
+            String note = "- Press Enter -";
+            int noteWidth = g.getFontMetrics().stringWidth(note);
+            g.drawString(note, centerX - noteWidth / 2, centerY + 40);
+        }
     }
 
     public void addSprite(Sprite sprite) {
@@ -200,7 +235,7 @@ public class World {
 
     public void removeSprite(Sprite sprite) {
         if (!removeSprites.contains(sprite)) {
-            removeSprites.remove(sprite);
+            removeSprites.add(sprite);
         }
     }
 }

@@ -72,6 +72,12 @@ public class Menu extends UIComponent {
         selection = 0;
     }
 
+    public void resetToMain() {
+        screen = SCREEN_MAIN;
+        selection = 0;
+        settingsConfirm = false;
+    }
+
     @Override
     public void update(float deltaTime) {
         if (screen == SCREEN_SETTINGS) {

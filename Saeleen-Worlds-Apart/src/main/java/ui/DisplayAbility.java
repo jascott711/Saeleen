@@ -3,11 +3,12 @@ package ui;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 import objects.Player;
 import objects.abilities.Bolt;
-import objects.abilities.Bullet;
 import objects.abilities.Knife;
 
 /**
@@ -44,12 +45,14 @@ public class DisplayAbility extends PlayerStats {
             abilityString = "Knife";
             prevAbilityString = "Bolt";
             nextAbilityString = "Bolt";
-            abilityImage = knife.animations[knife.currentAnimation].getImage();
+            knife.animations[0].playAnimation();
+            abilityImage = knife.animations[0].getImage();
         } else if (player.spellChoice == 1) {
             abilityString = "Bolt";
             prevAbilityString = "Knife";
             nextAbilityString = "Knife";
-            abilityImage = bolt.animations[bolt.currentAnimation].getImage();
+            bolt.animations[0].playAnimation();
+            abilityImage = bolt.animations[0].getImage();
         }
     }
 
@@ -65,17 +68,39 @@ public class DisplayAbility extends PlayerStats {
         g.fillRoundRect(rect.x + rect.width + 3, rect.y + 1, rect.width / 2- 2, rect.height - 2, borderRadius, borderRadius);
         g.setColor(new Color(25,25,25)); //black #191919;
         g.fillRoundRect(rect.x + rect.width + 5, rect.y + 3, rect.width / 2- 6, rect.height - 6, borderRadius, borderRadius);
-        //text
-        g.setColor(Color.WHITE);
-        g.setFont( new Font("Tahoma", Font.BOLD, FontSize));
-        g.drawString("Ability", rect.x + rect.width + 12, rect.y + lineHeight);
-        g.setFont( new Font("Tahoma", Font.ITALIC, FontSize));
-        g.drawString(abilityString, rect.x + rect.width + 12, rect.y + lineHeight * 2);
         //selected ability icon
         if (abilityImage != null) {
-            BufferedImage rotated = Bullet.rotate(abilityImage, Math.toRadians(90));
-            int iconWidth = (player.spellChoice == 1) ? 24 : 20;
-            g.drawImage(rotated, rect.x + rect.width + 22, rect.y + lineHeight * 3 - 8, iconWidth, 30, null);
+            int boxX = rect.x + rect.width + 2;
+            int boxWidth = rect.width / 2;
+            int maxIconWidth = boxWidth - 6;
+            int maxIconHeight = rect.height - 12;
+
+            //rotated 90 degrees, so the bounding box swaps width/height
+            float scale = Math.min((float) maxIconWidth / abilityImage.getHeight(),
+                    (float) maxIconHeight / abilityImage.getWidth());
+            int drawWidth = (int) (abilityImage.getWidth() * scale);
+            int drawHeight = (int) (abilityImage.getHeight() * scale);
+
+            Graphics2D g2 = (Graphics2D) g;
+            AffineTransform oldTransform = g2.getTransform();
+            g2.translate(boxX + boxWidth / 2, rect.y + rect.height / 2);
+            g2.rotate(Math.toRadians(90));
+            g2.drawImage(abilityImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight, null);
+            g2.setTransform(oldTransform);
+        }
+
+        //cooldown mask
+        int boxX = rect.x + rect.width + 2;
+        int boxWidth = rect.width / 2;
+        float cooldown = player.getAbilityCooldown();
+        if (cooldown > 0) {
+            g.setColor(new Color(0, 0, 0, 190));
+            g.fillRoundRect(boxX, rect.y, boxWidth, rect.height, borderRadius, borderRadius);
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Tahoma", Font.BOLD, 16));
+            String cooldownText = String.format("%.1f", cooldown);
+            int cooldownWidth = g.getFontMetrics().stringWidth(cooldownText);
+            g.drawString(cooldownText, boxX + boxWidth / 2 - cooldownWidth / 2, rect.y + rect.height / 2 + 6);
         }
         
     }

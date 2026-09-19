@@ -45,6 +45,8 @@ public class Player extends Npc implements ActionListener {
     private float manaDrainAccum = 0;
     private float runTimer = 0;
     private float runCooldown = 0;
+    private float runDuration = 2.0f;
+    private float abilityCooldown = 0;
 
     public int level = 1; // starting level
     public int experience = 0; // starting experience
@@ -277,6 +279,22 @@ public class Player extends Npc implements ActionListener {
     public void setAbilitySlots(int abilitySlots) {
         this.abilitySlots = abilitySlots;
     }
+
+    public float getRunCooldown() {
+        return runCooldown;
+    }
+
+    public float getRunTimer() {
+        return runTimer;
+    }
+
+    public float getRunDuration() {
+        return runDuration;
+    }
+
+    public float getAbilityCooldown() {
+        return abilityCooldown;
+    }
     // #endregion
 
     public void checkLevelUP() {
@@ -302,8 +320,7 @@ public class Player extends Npc implements ActionListener {
         boolean isIntersectingIob = false;
         int stepback = 1;
 
-        float runDuration = 1.0f;
-        float runCooldownTime = 1.0f;
+        float runCooldownTime = 2.0f;
 
         boolean isRunning = Input.getKey(KeyEvent.VK_SHIFT) && !isIntersectingIob && spellChoice2 == 0 && mana > 0 && runCooldown <= 0;
 
@@ -322,6 +339,13 @@ public class Player extends Npc implements ActionListener {
         }
         //running is Ability2 and consumes mana while active
         if (isRunning) {
+            //starting a run costs 1 mana immediately
+            if (Input.getKeyDown(KeyEvent.VK_SHIFT)) {
+                mana -= 1;
+                if (mana < 0) {
+                    mana = 0;
+                }
+            }
             manaDrainAccum += 5 * deltaTime;
             if (manaDrainAccum >= 1) {
                 int drain = (int) manaDrainAccum;
@@ -342,6 +366,13 @@ public class Player extends Npc implements ActionListener {
                 if (runCooldown < 0) {
                     runCooldown = 0;
                 }
+            }
+        }
+
+        if (abilityCooldown > 0) {
+            abilityCooldown -= deltaTime;
+            if (abilityCooldown < 0) {
+                abilityCooldown = 0;
             }
         }
         //
@@ -547,6 +578,9 @@ public class Player extends Npc implements ActionListener {
                     // System.out.println(sprite.getClass().toString());
                     if (sprite instanceof Enemy) {
                         this.health -= ((Enemy)sprite).dmg;
+                        if (this.health < 0) {
+                            this.health = 0;
+                        }
                         isHit = true;
                         whenPlayerWasHit = System.nanoTime();
 
@@ -654,12 +688,15 @@ public class Player extends Npc implements ActionListener {
             if (!isInChat) {
 				switch (spellChoice) {
 					case 0: {
-                        Knife knife = new Knife(World.currentPlayer.getPosX(), World.currentPlayer.getPosY(), direction);
-                        World.currentWorld.addSprite(knife);
+                        if (abilityCooldown <= 0) {
+                            Knife knife = new Knife(World.currentPlayer.getPosX(), World.currentPlayer.getPosY(), direction);
+                            World.currentWorld.addSprite(knife);
+                            abilityCooldown = 1.0f;
+                        }
 						break;
 					}
 					case 1: {
-						if (level >= 3 && mana > 0) {
+						if (abilityCooldown <= 0 && level >= 3 && mana > 0) {
                             System.out.println("Before bolt mana = "+World.currentPlayer.getMana());
 
 							Bolt bolt = new Bolt(World.currentPlayer.getPosX(), World.currentPlayer.getPosY(), direction);
@@ -674,6 +711,7 @@ public class Player extends Npc implements ActionListener {
 
                             System.out.println("After bolt mana = "+World.currentPlayer.getMana());
                             System.out.println("currentMana = "+ currentMana );
+                            abilityCooldown = 3.0f;
                             break;
 						}
 					}

@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.Transparency;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
@@ -16,6 +17,7 @@ import java.awt.image.BufferedImage;
 import graphics.Renderer;
 import objects.Mob;
 import objects.Player;
+import objects.impassable.Iob;
 import objects.npcs.Npc;
 import objects.npcs.aggressive.Enemy;
 import world.World;
@@ -72,6 +74,16 @@ public class Bullet extends Mob {
         posY += moveY * deltaTime;
         dimensions.x = (int) getPosX() - dimensions.width / 2;
         dimensions.y = (int) getPosY() - dimensions.height / 2;
+
+        //delete the ability if it collides with an impassable object
+        for (Iob iob : World.currentWorld.iobSprites) {
+            for (Rectangle box : iob.getHitboxes()) {
+                if (dimensions.intersects(box)) {
+                    World.currentWorld.removeSprite(this);
+                    return;
+                }
+            }
+        }
 
         // System.out.println("I exist at " + posX + ", " + posY);
     }

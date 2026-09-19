@@ -3,6 +3,7 @@ package graphics;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.GraphicsConfiguration;
@@ -174,6 +175,7 @@ public class Renderer {
                     World.render(g);
 
                     // Draw FPS counter
+                    g.setFont(new Font("Tahoma", Font.PLAIN, 12));
                     g.setColor(Color.LIGHT_GRAY);
                     g.drawString("FPS: " + String.valueOf(currentFPS), 2, gameHeight - 12);
 
