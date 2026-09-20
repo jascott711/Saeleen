@@ -228,6 +228,9 @@ public class Enemy extends Npc {
         if (health <= 0) {
             World.currentWorld.removeSprites.add(this);
             World.currentPlayer.experience += xpGiven;
+            World.currentPlayer.xpFlashTimer = 2.0f;
+            World.currentPlayer.animXpFlash.setCurrentImage(0);
+            World.currentPlayer.animXpFlash.setLastTime(System.nanoTime());
 
             //item drop
             Random dropRate = new Random();

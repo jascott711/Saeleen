@@ -59,6 +59,7 @@ public class Player extends Npc implements ActionListener {
 
     public int itemLimit = 6;
     public ArrayList<Item> myItems; // players current items
+    public float itemsFullTimer = 0; // shows the "ITEMS FULL" message while > 0
 
     public boolean isNearEdgeOfMap = false;
     public boolean isNearEdgeOfMapXMin = false;
@@ -70,6 +71,12 @@ public class Player extends Npc implements ActionListener {
     private boolean showAction = false;
     public boolean isInChat = false;
     public boolean isHit = false;
+
+    public float healFlashTimer = 0; // green tint over the sprite while recovering HP
+    public float manaFlashTimer = 0; // blue tint over the sprite while recovering MP
+    public float xpFlashTimer = 0; // xp gain flash over the sprite while > 0
+    private float lastHealth = -1;
+    private float lastMana = -1;
 
     public Point spritePoint, playerPoint;
 
@@ -87,6 +94,10 @@ public class Player extends Npc implements ActionListener {
 
     public Animation animAttackUp = new Animation(), animAttackDown = new Animation(), animAttackLeft = new Animation(),
             animAttackRight = new Animation();
+
+    public Animation animHealFlash = new Animation();
+    public Animation animManaFlash = new Animation();
+    public Animation animXpFlash = new Animation();
 
 
     public Player(float posX, float posY) {
@@ -165,6 +176,42 @@ public class Player extends Npc implements ActionListener {
                 animTakeDamage.images.add(image);
             }
             animTakeDamage.setFps(8);
+
+            BufferedImage spriteSheetHealFlash = ImageIO
+                    .read(new File(getClass().getResource("/images/recover-hp-anim.png").toURI()));
+            ;
+            BufferedImage[] spriteSheetHealFlashFrames = new BufferedImage[rows * cols];
+            for (int j = 0; j < cols; j++) {
+                spriteSheetHealFlashFrames[j] = spriteSheetHealFlash.getSubimage(j * width, 0 * height, width, height);
+            }
+            for (BufferedImage image : spriteSheetHealFlashFrames) {
+                animHealFlash.images.add(image);
+            }
+            animHealFlash.setFps(8);
+
+            BufferedImage spriteSheetManaFlash = ImageIO
+                    .read(new File(getClass().getResource("/images/recover-mp-anim.png").toURI()));
+            ;
+            BufferedImage[] spriteSheetManaFlashFrames = new BufferedImage[rows * cols];
+            for (int j = 0; j < cols; j++) {
+                spriteSheetManaFlashFrames[j] = spriteSheetManaFlash.getSubimage(j * width, 0 * height, width, height);
+            }
+            for (BufferedImage image : spriteSheetManaFlashFrames) {
+                animManaFlash.images.add(image);
+            }
+            animManaFlash.setFps(8);
+
+            BufferedImage spriteSheetXpFlash = ImageIO
+                    .read(new File(getClass().getResource("/images/gain-xp-anim.png").toURI()));
+            ;
+            BufferedImage[] spriteSheetXpFlashFrames = new BufferedImage[rows * cols];
+            for (int j = 0; j < cols; j++) {
+                spriteSheetXpFlashFrames[j] = spriteSheetXpFlash.getSubimage(j * width, 0 * height, width, height);
+            }
+            for (BufferedImage image : spriteSheetXpFlashFrames) {
+                animXpFlash.images.add(image);
+            }
+            animXpFlash.setFps(8);
             // #endregion
 
             // #region player attack
@@ -451,6 +498,8 @@ public class Player extends Npc implements ActionListener {
                 if (doesCollide(sprite)) {
                     if (myItems.size() < itemLimit) {
                         sprite.pickItemUp(this);
+                    } else {
+                        itemsFullTimer = 2.0f;
                     }
                     itemIndex = World.currentWorld.itemSprites.indexOf(sprite);
                     break;
@@ -470,6 +519,18 @@ public class Player extends Npc implements ActionListener {
         newY += knockbackVelY * deltaTime;
         knockbackVelX *= 0.8f;
         knockbackVelY *= 0.8f;
+
+        //keep the player inside the map bounds
+        if (newX < dimensions.width / 2) {
+            newX = dimensions.width / 2;
+        } else if (newX > Renderer.gameWidth * 3 - dimensions.width / 2) {
+            newX = Renderer.gameWidth * 3 - dimensions.width / 2;
+        }
+        if (newY < dimensions.height / 2) {
+            newY = dimensions.height / 2;
+        } else if (newY > Renderer.gameHeight * 3 - dimensions.height / 2) {
+            newY = Renderer.gameHeight * 3 - dimensions.height / 2;
+        }
 
         Rectangle testDimensionsX = new Rectangle(
             (int) newX - dimensions.width / 2, dimensions.y, dimensions.width, dimensions.height
@@ -806,6 +867,41 @@ public class Player extends Npc implements ActionListener {
             World.mainMenu.openPause();
             World.inMenu = true;
         }
+
+        if (itemsFullTimer > 0) {
+            itemsFullTimer -= deltaTime;
+            if (itemsFullTimer < 0) {
+                itemsFullTimer = 0;
+            }
+        }
+
+        //recovery flashes: green for HP gained, blue for MP gained
+        if (lastHealth >= 0 && health > lastHealth) {
+            healFlashTimer = 0.6f;
+        }
+        if (lastMana >= 0 && mana > lastMana) {
+            manaFlashTimer = 0.6f;
+        }
+        lastHealth = health;
+        lastMana = mana;
+        if (healFlashTimer > 0) {
+            healFlashTimer -= deltaTime;
+            if (healFlashTimer < 0) {
+                healFlashTimer = 0;
+            }
+        }
+        if (manaFlashTimer > 0) {
+            manaFlashTimer -= deltaTime;
+            if (manaFlashTimer < 0) {
+                manaFlashTimer = 0;
+            }
+        }
+        if (xpFlashTimer > 0) {
+            xpFlashTimer -= deltaTime;
+            if (xpFlashTimer < 0) {
+                xpFlashTimer = 0;
+            }
+        }
     }
 
     @Override
@@ -853,11 +949,46 @@ public class Player extends Npc implements ActionListener {
 
             g.setColor(Color.RED);
             g.setFont( new Font("Tahoma", Font.BOLD, 20 + fontSize));
-            g.drawString("HIT", realX + 8 - widthGrowth, realY - heightGrowth);
+            String hitString = "HIT";
+            int hitWidth = g.getFontMetrics().stringWidth(hitString);
+            g.drawString(hitString, realX + playerTakeDamageImage.getWidth() / 2 - hitWidth / 2 - widthGrowth, realY - heightGrowth);
 
             //g.drawLine(spritePoint.x, spritePoint.y, playerPoint.x, playerPoint.y);
         } else if (!isHit) {
             ellapsedPlayerHitTime = 0;
+        }
+
+        if (itemsFullTimer > 0) {
+            g.setColor(Color.RED);
+            g.setFont(new Font("Tahoma", Font.BOLD, 20));
+            String itemsFullString = "ITEMS FULL";
+            int itemsFullWidth = g.getFontMetrics().stringWidth(itemsFullString);
+            g.drawString(itemsFullString, realX + playerTakeDamageImage.getWidth() / 2 - itemsFullWidth / 2, realY - 8);
+        }
+
+        //recovery/xp flash animations (assets: recover-hp-anim / recover-mp-anim / gain-xp-anim)
+        if (healFlashTimer > 0 || manaFlashTimer > 0 || xpFlashTimer > 0) {
+            if (healFlashTimer > 0) {
+                animHealFlash.playAnimation();
+                BufferedImage healFlashImage = animHealFlash.getImage();
+                if (healFlashImage != null) {
+                    g.drawImage(healFlashImage, realX, realY, healFlashImage.getWidth(), healFlashImage.getHeight(), null);
+                }
+            }
+            if (manaFlashTimer > 0) {
+                animManaFlash.playAnimation();
+                BufferedImage manaFlashImage = animManaFlash.getImage();
+                if (manaFlashImage != null) {
+                    g.drawImage(manaFlashImage, realX, realY, manaFlashImage.getWidth(), manaFlashImage.getHeight(), null);
+                }
+            }
+            if (xpFlashTimer > 0) {
+                animXpFlash.playAnimation();
+                BufferedImage xpFlashImage = animXpFlash.getImage();
+                if (xpFlashImage != null) {
+                    g.drawImage(xpFlashImage, realX, realY, xpFlashImage.getWidth(), xpFlashImage.getHeight(), null);
+                }
+            }
         }
     }
 

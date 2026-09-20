@@ -97,6 +97,7 @@ public final class App {
         player.direction = 0;
         player.isHit = false;
         player.isInChat = false;
+        player.xpFlashTimer = 0;
     }
 
 	public static void quit() {

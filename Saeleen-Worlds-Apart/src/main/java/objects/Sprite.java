@@ -202,11 +202,25 @@ public class Sprite {
 
         // ------------ testing
         if (showDimensions) {
-            //draw sprite bounds for collision detection
+            //draw sprite bounds for collision detection, using the same screen transform as the sprite image
             g.setColor(Color.RED);
             for (Rectangle box : getHitboxes()) {
-                int boxScreenX = box.x - (int) Renderer.camX + Renderer.gameWidth / 2;
-                int boxScreenY = box.y - (int) Renderer.camY + Renderer.gameHeight / 2;
+                int boxScreenX = box.x;
+                if (World.currentPlayer.isNearEdgeOfMapXMin) {
+                    boxScreenX = box.x;
+                } else if (World.currentPlayer.isNearEdgeOfMapXMax) {
+                    boxScreenX = box.x - (Renderer.gameWidth * 2);
+                } else {
+                    boxScreenX = box.x - (int) Renderer.camX + Renderer.gameWidth / 2;
+                }
+                int boxScreenY = box.y;
+                if (World.currentPlayer.isNearEdgeOfMapYMin) {
+                    boxScreenY = box.y;
+                } else if (World.currentPlayer.isNearEdgeOfMapYMax) {
+                    boxScreenY = box.y - (Renderer.gameHeight * 2);
+                } else {
+                    boxScreenY = box.y - (int) Renderer.camY + Renderer.gameHeight / 2;
+                }
                 g.drawRect(boxScreenX, boxScreenY, box.width, box.height);
             }
         }
