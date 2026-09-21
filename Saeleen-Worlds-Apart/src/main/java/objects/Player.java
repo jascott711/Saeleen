@@ -42,6 +42,8 @@ public class Player extends Npc implements ActionListener {
     public int mana = maxMana; // current mana
     public int spellChoice = 0;
     public int spellChoice2 = 0;
+    public String[] abilityCycle1 = new String[]{"Knife", "Bolt", ""}; // ability 1 cycle (3 slots)
+    public String[] abilityCycle2 = new String[]{"Dash", "", ""};       // ability 2 cycle (3 slots)
     private float manaDrainAccum = 0;
     private float runTimer = 0;
     private float runCooldown = 0;
@@ -341,6 +343,30 @@ public class Player extends Npc implements ActionListener {
 
     public float getAbilityCooldown() {
         return abilityCooldown;
+    }
+
+    //level required to use an ability (unlocked at level 1 by default)
+    public int abilityLevelRequired(String ability) {
+        if ("Bolt".equals(ability)) {
+            return 3;
+        }
+        return 1;
+    }
+
+    public boolean isAbilityUnlocked(String ability) {
+        return level >= abilityLevelRequired(ability);
+    }
+
+    //moves to the next valid (non-empty, unlocked) slot in a cycle, wrapping around and skipping locked or empty slots
+    public int nextValidIndex(String[] cycle, int current, int step) {
+        int size = cycle.length;
+        for (int i = 1; i <= size; i++) {
+            int test = ((current + step * i) % size + size) % size;
+            if (cycle[test] != null && !cycle[test].isEmpty() && isAbilityUnlocked(cycle[test])) {
+                return test;
+            }
+        }
+        return current;
     }
     // #endregion
 
@@ -707,31 +733,19 @@ public class Player extends Npc implements ActionListener {
         }
 
         if (Input.getKeyDown(KeyEvent.VK_O)) {
-        	spellChoice--;
-        	if(spellChoice < 0)	{
-                spellChoice = abilitySlots;
-            }
+        	spellChoice = nextValidIndex(abilityCycle1, spellChoice, -1);
         }
 
         if (Input.getKeyDown(KeyEvent.VK_P)) {
-        	spellChoice++;
-        	if(spellChoice > abilitySlots)	{
-                spellChoice = 0;
-            }
+        	spellChoice = nextValidIndex(abilityCycle1, spellChoice, 1);
         }
 
         if (Input.getKeyDown(KeyEvent.VK_OPEN_BRACKET)) {
-        	spellChoice2--;
-        	if(spellChoice2 < 0)	{
-                spellChoice2 = abilitySlots;
-            }
+        	spellChoice2 = nextValidIndex(abilityCycle2, spellChoice2, -1);
         }
 
         if (Input.getKeyDown(KeyEvent.VK_CLOSE_BRACKET)) {
-        	spellChoice2++;
-        	if(spellChoice2 > abilitySlots)	{
-                spellChoice2 = 0;
-            }
+        	spellChoice2 = nextValidIndex(abilityCycle2, spellChoice2, 1);
         }
 
         // if (Input.getKeyDown(KeyEvent.VK_K)) {
@@ -757,7 +771,7 @@ public class Player extends Npc implements ActionListener {
 						break;
 					}
 					case 1: {
-						if (abilityCooldown <= 0 && level >= 3 && mana > 0) {
+						if (abilityCooldown <= 0 && isAbilityUnlocked(abilityCycle1[1]) && mana > 0) {
                             System.out.println("Before bolt mana = "+World.currentPlayer.getMana());
 
 							Bolt bolt = new Bolt(World.currentPlayer.getPosX(), World.currentPlayer.getPosY(), direction);
@@ -943,15 +957,7 @@ public class Player extends Npc implements ActionListener {
                 //ellapsedPlayerHitTime = System.nanoTime();
             }
 
-            int fontSize = (int)(ellapsedPlayerHitTime / 8);
-            int widthGrowth = (int)(ellapsedPlayerHitTime / 16);
-            int heightGrowth = (int)(ellapsedPlayerHitTime / 8);
-
-            g.setColor(Color.RED);
-            g.setFont( new Font("Tahoma", Font.BOLD, 20 + fontSize));
-            String hitString = "HIT";
-            int hitWidth = g.getFontMetrics().stringWidth(hitString);
-            g.drawString(hitString, realX + playerTakeDamageImage.getWidth() / 2 - hitWidth / 2 - widthGrowth, realY - heightGrowth);
+            playerEffectText(g, "HIT", Color.RED);
 
             //g.drawLine(spritePoint.x, spritePoint.y, playerPoint.x, playerPoint.y);
         } else if (!isHit) {
@@ -974,6 +980,7 @@ public class Player extends Npc implements ActionListener {
                 if (healFlashImage != null) {
                     g.drawImage(healFlashImage, realX, realY, healFlashImage.getWidth(), healFlashImage.getHeight(), null);
                 }
+                playerEffectText(g, "HP RECOVERED", ui.UIComponent.hb100);
             }
             if (manaFlashTimer > 0) {
                 animManaFlash.playAnimation();
@@ -981,6 +988,7 @@ public class Player extends Npc implements ActionListener {
                 if (manaFlashImage != null) {
                     g.drawImage(manaFlashImage, realX, realY, manaFlashImage.getWidth(), manaFlashImage.getHeight(), null);
                 }
+                playerEffectText(g, "MP RECOVERED", ui.UIComponent.mb100);
             }
             if (xpFlashTimer > 0) {
                 animXpFlash.playAnimation();
@@ -990,6 +998,25 @@ public class Player extends Npc implements ActionListener {
                 }
             }
         }
+    }
+
+    //draws effect text centered above the sprite with a 1px white outline
+    private void playerEffectText(Graphics g, String text, Color color) {
+        g.setFont(new Font("Tahoma", Font.BOLD, 20));
+        int textWidth = g.getFontMetrics().stringWidth(text);
+        int x = realX + animTakeDamage.getImage().getWidth() / 2 - textWidth / 2;
+        int y = realY - 8;
+        g.setColor(Color.WHITE);
+        g.drawString(text, x - 1, y - 1);
+        g.drawString(text, x + 1, y - 1);
+        g.drawString(text, x - 1, y + 1);
+        g.drawString(text, x + 1, y + 1);
+        g.drawString(text, x, y - 1);
+        g.drawString(text, x, y + 1);
+        g.drawString(text, x - 1, y);
+        g.drawString(text, x + 1, y);
+        g.setColor(color);
+        g.drawString(text, x, y);
     }
 
     @Override

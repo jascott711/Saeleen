@@ -83,6 +83,9 @@ public class World {
             if (Input.getKeyDown(KeyEvent.VK_ESCAPE)) {
                 showStats = false;
             }
+            for (UIComponent uicomponent : currentWorld.uicomponents) {
+                uicomponent.update(deltaTime);
+            }
             return;
         }
 

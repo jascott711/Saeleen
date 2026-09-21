@@ -53,6 +53,8 @@ public class DisplayAbility extends PlayerStats {
             nextAbilityString = "Knife";
             bolt.animations[0].playAnimation();
             abilityImage = bolt.animations[0].getImage();
+        } else {
+            abilityImage = null;
         }
     }
 

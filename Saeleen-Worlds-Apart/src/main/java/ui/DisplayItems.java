@@ -15,7 +15,6 @@ import objects.items.Item;
  */
 public class DisplayItems extends PlayerStats {
 
-    private int itemCount = 0;
     private int itemCountMax = 6;
     public int itemIconWidth = 24;
     public int itemIconHeight = 24;
@@ -35,7 +34,7 @@ public class DisplayItems extends PlayerStats {
     }
 
     public void update (float deltaTime) {
-        itemCount = player.myItems.size();
+
     }
 
     @Override
@@ -56,7 +55,7 @@ public class DisplayItems extends PlayerStats {
         g.setFont( new Font("Tahoma", Font.BOLD, FontSize));
         g.drawString("Items", rect.x + 12, rect.y + lineHeight);
 
-        for (int i = 0; i < itemCount; i++) {
+        for (int i = 0; i < player.myItems.size(); i++) {
             BufferedImage image = player.myItems.get(i).animations[player.myItems.get(i).currentAnimation].getImage();
 
             if (i <= (itemCountMax / 2) - 1) {
