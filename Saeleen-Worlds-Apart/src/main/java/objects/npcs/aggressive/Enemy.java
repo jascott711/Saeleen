@@ -49,6 +49,10 @@ public class Enemy extends Npc {
     public boolean isPlayerInVision = false;
     public boolean isHit = false;
 
+    private String visionAlert = "";
+    private float visionAlertTimer = 0;
+    private static final float VISION_ALERT_TIME = 0.5f;
+
     private boolean isReturningToStart = false;
 
     public Rectangle outerVision;
@@ -322,6 +326,23 @@ public class Enemy extends Npc {
             isReturningToStart = true;
         }
 
+        //update the vision alert: "!" once the player is spotted, "?" once they are lost
+        if (isPlayerInVision && !wasPlayerInVision) {
+            visionAlert = "!";
+            visionAlertTimer = VISION_ALERT_TIME;
+        } else if (!isPlayerInVision && wasPlayerInVision) {
+            visionAlert = "?";
+            visionAlertTimer = VISION_ALERT_TIME;
+        }
+
+        if (visionAlertTimer > 0) {
+            visionAlertTimer -= deltaTime;
+            if (visionAlertTimer <= 0) {
+                visionAlert = "";
+                visionAlertTimer = 0;
+            }
+        }
+
         if (!isPlayerInVision) {
 
             if (isReturningToStart) {
@@ -549,6 +570,11 @@ public class Enemy extends Npc {
         g.setFont( new Font("Tahoma", Font.BOLD, 10));
         g.drawString("" + health, rect.x + 10, rect.y + 11);
 
+        //draw the vision alert above the health bar: "!" spotted, "?" lost
+        if (!visionAlert.isEmpty()) {
+            effectText(g, visionAlert, Color.YELLOW, realX, realY);
+        }
+
         if (isHit) {
             animTakeDamage.playAnimation();
             g.drawImage(playerTakeDamageImage, realX, realY, playerTakeDamageImage.getWidth(), playerTakeDamageImage.getHeight(), null);
@@ -567,6 +593,26 @@ public class Enemy extends Npc {
 
 
 
+
+    //draws effect text centered above the enemy sprite with a 1px white outline
+    private void effectText(Graphics g, String text, Color color, int realX, int realY) {
+        g.setFont(new Font("Tahoma", Font.BOLD, 20));
+        int textWidth = g.getFontMetrics().stringWidth(text);
+        BufferedImage img = animations[currentAnimation].getImage();
+        int x = realX + img.getWidth() / 2 - textWidth / 2;
+        int y = realY - 25;
+        g.setColor(Color.WHITE);
+        g.drawString(text, x - 1, y - 1);
+        g.drawString(text, x + 1, y - 1);
+        g.drawString(text, x - 1, y + 1);
+        g.drawString(text, x + 1, y + 1);
+        g.drawString(text, x, y - 1);
+        g.drawString(text, x, y + 1);
+        g.drawString(text, x - 1, y);
+        g.drawString(text, x + 1, y);
+        g.setColor(color);
+        g.drawString(text, x, y);
+    }
 
     //get and draw chat window
     @Override
