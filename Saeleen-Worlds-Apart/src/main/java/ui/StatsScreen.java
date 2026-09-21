@@ -6,7 +6,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashMap;
@@ -18,6 +17,7 @@ import input.Input;
 import objects.Player;
 import objects.abilities.Bolt;
 import objects.abilities.Knife;
+import objects.abilities.Slash;
 import objects.items.Item;
 import world.World;
 
@@ -37,6 +37,7 @@ public class StatsScreen extends UIComponent {
     private int selectedItem = 0;
     private int currentTab = 0; //0 = Stats, 1 = Abilities, 2 = Items
     private static final int TAB_COUNT = 3;
+    private float iconTime;
 
     public StatsScreen(Player player) {
         this.player = player;
@@ -48,6 +49,7 @@ public class StatsScreen extends UIComponent {
     private void loadAbilityIcons() {
         abilityIcons.put("Knife", new Knife(0, 0, 0).animations[0].getImage());
         abilityIcons.put("Bolt", new Bolt(0, 0, 0).animations[0].getImage());
+        abilityIcons.put("Slash", new Slash(player).animations[0].getImage());
         try {
             BufferedImage wingSheet = Renderer.loadImage("/images/wing.png");
             abilityIcons.put("Dash", wingSheet.getSubimage(0, 0, wingSheet.getWidth() / 4, wingSheet.getHeight()));
@@ -59,6 +61,7 @@ public class StatsScreen extends UIComponent {
     private void loadAbilityAnims() {
         abilityAnims.put("Knife", new Knife(0, 0, 0).animations[0]);
         abilityAnims.put("Bolt", new Bolt(0, 0, 0).animations[0]);
+        abilityAnims.put("Slash", new Slash(player).animations[0]);
         try {
             BufferedImage wingSheet = Renderer.loadImage("/images/wing.png");
             Animation runAnim = new Animation();
@@ -77,10 +80,12 @@ public class StatsScreen extends UIComponent {
     private void loadAbilityDescriptions() {
         abilityDescriptions.put("Knife", "Throw a swift blade at your foe in the direction you face.");
         abilityDescriptions.put("Bolt", "Unleash a magical bolt that blasts your enemies in the direction you face.");
+        abilityDescriptions.put("Slash", "Carve a 120-degree arc of steel in front of you, cutting down every foe in the swing.");
         abilityDescriptions.put("Dash", "Hold SHIFT to dash into a burst of speed. Drains mana while moving.");
 
         abilityStats.put("Knife", new String[] {"10 dmg", "0 mp", "1s cd"});
         abilityStats.put("Bolt", new String[] {"25 dmg", "2 mp", "3s cd"});
+        abilityStats.put("Slash", new String[] {"15 dmg", "0 mp", "0.4s cd"});
         abilityStats.put("Dash", new String[] {"3x speed", "1 mp", "2s cd"});
     }
 
@@ -97,6 +102,7 @@ public class StatsScreen extends UIComponent {
         if (!World.showStats) {
             return;
         }
+        iconTime += deltaTime;
 
         if (player.myItems.isEmpty()) {
             selectedItem = 0;
@@ -465,25 +471,28 @@ public class StatsScreen extends UIComponent {
         Animation anim = abilityAnims.get(abilityName);
         BufferedImage img = (anim == null) ? null : anim.getImage();
         if (img != null) {
-            int maxIconWidth = 54;
-            int maxIconHeight = 72;
-            float scale;
             if ("Dash".equals(abilityName)) {
-                scale = Math.min((float) maxIconWidth / img.getWidth(), (float) maxIconHeight / img.getHeight()) * 0.8f;
-            } else {
-                scale = Math.min((float) maxIconWidth / img.getHeight(), (float) maxIconHeight / img.getWidth());
-            }
-            int drawWidth = (int) (img.getWidth() * scale);
-            int drawHeight = (int) (img.getHeight() * scale);
-            if ("Dash".equals(abilityName)) {
-                g.drawImage(img, x + spriteWidth / 2 - drawWidth / 2, contentY + contentHeight / 2 - drawHeight / 2, drawWidth, drawHeight, null);
+                int maxIconWidth = 54;
+                int maxIconHeight = 72;
+                float scale = Math.min((float) maxIconWidth / img.getWidth(), (float) maxIconHeight / img.getHeight()) * 0.8f;
+                int dashW = (int) (img.getWidth() * scale);
+                int dashH = (int) (img.getHeight() * scale);
+                g.drawImage(img, x + spriteWidth / 2 - dashW / 2, contentY + contentHeight / 2 - dashH / 2, dashW, dashH, null);
             } else {
                 Graphics2D g2 = (Graphics2D) g;
-                AffineTransform oldTransform = g2.getTransform();
-                g2.translate(x + spriteWidth / 2, contentY + contentHeight / 2);
-                g2.rotate(Math.toRadians(90));
-                g2.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight, null);
-                g2.setTransform(oldTransform);
+                if ("Slash".equals(abilityName)) {
+                    //Slash: waves over 20 degrees around the bottom of the sprite box
+                    AbilityIconAnimations.drawSlashWave(g2, img, x, contentY, spriteWidth, contentHeight, iconTime);
+                } else if ("Knife".equals(abilityName)) {
+                    //Knife: glides up and out the top, clipped to the sprite box
+                    AbilityIconAnimations.drawGlideUp(g2, img, x, contentY, spriteWidth, contentHeight, iconTime);
+                } else if ("Bolt".equals(abilityName)) {
+                    //Bolt: same glide, drawn a little smaller so the loop reads like the knife
+                    AbilityIconAnimations.drawGlideUp(g2, img, x, contentY, spriteWidth, contentHeight, iconTime, 0.8f);
+                } else {
+                    //future abilities default to the upward glide
+                    AbilityIconAnimations.drawGlideUp(g2, img, x, contentY, spriteWidth, contentHeight, iconTime);
+                }
             }
         } else {
             g.setFont(new Font("Tahoma", Font.PLAIN, 12));

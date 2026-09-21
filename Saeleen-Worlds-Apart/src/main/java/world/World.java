@@ -11,6 +11,7 @@ import input.Input;
 import objects.Mob;
 import objects.Player;
 import objects.Sprite;
+import objects.abilities.Slash;
 import objects.impassable.Iob;
 import objects.items.Coin;
 import objects.items.Item;
@@ -184,7 +185,9 @@ public class World {
         }
 
         for (Sprite sprite : currentWorld.sprites) {
-            sprite.render(g);
+            if (!(sprite instanceof Slash)) {
+                sprite.render(g);
+            }
         }
 
         for (Npc npcSprite : currentWorld.npcSprites) {
@@ -204,6 +207,13 @@ public class World {
         }
 
         currentPlayer.render(g);
+
+        //melee swings render on top of the player
+        for (Sprite sprite : currentWorld.sprites) {
+            if (sprite instanceof Slash) {
+                sprite.render(g);
+            }
+        }
 
         for (UIComponent uicomponent : currentWorld.uicomponents) {
             uicomponent.render(g);

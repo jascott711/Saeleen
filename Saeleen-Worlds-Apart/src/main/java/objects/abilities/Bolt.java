@@ -34,7 +34,6 @@ public class Bolt extends Bullet {
             // anim.images.add(Renderer.loadImage("/images/clara.png"));
             BufferedImage spriteSheet = ImageIO
                     .read(new File(getClass().getResource("/images/bolt.png").toURI()));
-            ;
             // The above line throws an checked IOException which must be caught.
 
             final int rows = 1;

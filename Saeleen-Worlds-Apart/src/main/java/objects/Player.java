@@ -42,7 +42,7 @@ public class Player extends Npc implements ActionListener {
     public int mana = maxMana; // current mana
     public int spellChoice = 0;
     public int spellChoice2 = 0;
-    public String[] abilityCycle1 = new String[]{"Knife", "Bolt", ""}; // ability 1 cycle (3 slots)
+    public String[] abilityCycle1 = new String[]{"Slash", "Knife", "Bolt"}; // ability 1 cycle (3 slots)
     public String[] abilityCycle2 = new String[]{"Dash", "", ""};       // ability 2 cycle (3 slots)
     private float manaDrainAccum = 0;
     private float runTimer = 0;
@@ -763,6 +763,14 @@ public class Player extends Npc implements ActionListener {
             if (!isInChat) {
 				switch (spellChoice) {
 					case 0: {
+						if (abilityCooldown <= 0 && isAbilityUnlocked(abilityCycle1[0])) {
+							Slash slash = new Slash(World.currentPlayer);
+							World.currentWorld.addSprite(slash);
+							abilityCooldown = 0.4f;
+						}
+						break;
+					}
+					case 1: {
                         if (abilityCooldown <= 0) {
                             Knife knife = new Knife(World.currentPlayer.getPosX(), World.currentPlayer.getPosY(), direction);
                             World.currentWorld.addSprite(knife);
@@ -770,8 +778,8 @@ public class Player extends Npc implements ActionListener {
                         }
 						break;
 					}
-					case 1: {
-						if (abilityCooldown <= 0 && isAbilityUnlocked(abilityCycle1[1]) && mana > 0) {
+					case 2: {
+						if (abilityCooldown <= 0 && isAbilityUnlocked(abilityCycle1[2]) && mana > 0) {
                             System.out.println("Before bolt mana = "+World.currentPlayer.getMana());
 
 							Bolt bolt = new Bolt(World.currentPlayer.getPosX(), World.currentPlayer.getPosY(), direction);

@@ -34,7 +34,6 @@ public class Knife extends Bullet {
             // anim.images.add(Renderer.loadImage("/images/clara.png"));
             BufferedImage spriteSheet = ImageIO
                     .read(new File(getClass().getResource("/images/knife.png").toURI()));
-            ;
             // The above line throws an checked IOException which must be caught.
 
             final int rows = 1;

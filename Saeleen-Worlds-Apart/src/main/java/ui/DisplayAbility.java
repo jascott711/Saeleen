@@ -4,12 +4,12 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 import objects.Player;
 import objects.abilities.Bolt;
 import objects.abilities.Knife;
+import objects.abilities.Slash;
 
 /**
  * DisplayAbility
@@ -21,15 +21,18 @@ public class DisplayAbility extends PlayerStats {
     private String prevAbilityString;
     private Knife knife;
     private Bolt bolt;
+    private Slash slash;
     private BufferedImage abilityImage;
+    private float iconTime;
 
     public DisplayAbility(Player player) {
         super(player);
-        abilityString = "Knife";
-        nextAbilityString = "Bolt";
+        abilityString = "Slash";
+        nextAbilityString = "Knife";
         prevAbilityString = "Bolt";
         knife = new Knife(0, 0, 0);
         bolt = new Bolt(0, 0, 0);
+        slash = new Slash(player);
     }
 
     public Player getPlayer() {
@@ -41,16 +44,23 @@ public class DisplayAbility extends PlayerStats {
     }
 
     public void update (float deltaTime) {
+        iconTime += deltaTime;
         if (player.spellChoice == 0) {
-            abilityString = "Knife";
+            abilityString = "Slash";
             prevAbilityString = "Bolt";
+            nextAbilityString = "Knife";
+            slash.animations[0].playAnimation();
+            abilityImage = slash.animations[0].getImage();
+        } else if (player.spellChoice == 1) {
+            abilityString = "Knife";
+            prevAbilityString = "Slash";
             nextAbilityString = "Bolt";
             knife.animations[0].playAnimation();
             abilityImage = knife.animations[0].getImage();
-        } else if (player.spellChoice == 1) {
+        } else if (player.spellChoice == 2) {
             abilityString = "Bolt";
             prevAbilityString = "Knife";
-            nextAbilityString = "Knife";
+            nextAbilityString = "Slash";
             bolt.animations[0].playAnimation();
             abilityImage = bolt.animations[0].getImage();
         } else {
@@ -74,21 +84,19 @@ public class DisplayAbility extends PlayerStats {
         if (abilityImage != null) {
             int boxX = rect.x + rect.width + 2;
             int boxWidth = rect.width / 2;
-            int maxIconWidth = boxWidth - 6;
-            int maxIconHeight = rect.height - 12;
-
-            //rotated 90 degrees, so the bounding box swaps width/height
-            float scale = Math.min((float) maxIconWidth / abilityImage.getHeight(),
-                    (float) maxIconHeight / abilityImage.getWidth());
-            int drawWidth = (int) (abilityImage.getWidth() * scale);
-            int drawHeight = (int) (abilityImage.getHeight() * scale);
+            int boxHeight = rect.height;
 
             Graphics2D g2 = (Graphics2D) g;
-            AffineTransform oldTransform = g2.getTransform();
-            g2.translate(boxX + boxWidth / 2, rect.y + rect.height / 2);
-            g2.rotate(Math.toRadians(90));
-            g2.drawImage(abilityImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight, null);
-            g2.setTransform(oldTransform);
+            if (player.spellChoice == 0) {
+                //Slash: knife waves over 20 degrees around the bottom of the box
+                AbilityIconAnimations.drawSlashWave(g2, abilityImage, boxX, rect.y, boxWidth, boxHeight, iconTime);
+            } else if (player.spellChoice == 1) {
+                //Knife: glides up and out the top, clipped to the box
+                AbilityIconAnimations.drawGlideUp(g2, abilityImage, boxX, rect.y, boxWidth, boxHeight, iconTime);
+            } else {
+                //Bolt: same glide, drawn a little smaller so the loop reads like the knife
+                AbilityIconAnimations.drawGlideUp(g2, abilityImage, boxX, rect.y, boxWidth, boxHeight, iconTime, 0.8f);
+            }
         }
 
         //cooldown mask

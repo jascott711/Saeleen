@@ -56,6 +56,10 @@ public class Enemy extends Npc {
     private long whenPlayerWasHit;
     private long ellapsedPlayerHitTime;
 
+    private float knockbackVelX = 0;
+    private float knockbackVelY = 0;
+    private float knockbackTimer = 0;
+
     protected int boundsWidth = 30;
     protected int boundsHeight = 30;
 
@@ -224,6 +228,32 @@ public class Enemy extends Npc {
 
 
 
+    public void damage(int amount) {
+        if (health <= 0) {
+            return;
+        }
+        health -= amount;
+        isHit = true;
+        whenPlayerWasHit = System.nanoTime();
+        killCheck();
+    }
+
+    /**
+     * Pushes the enemy backward, opposite to the direction it is walking,
+     * without changing which way it faces.
+     */
+    public void knockback(int walkDirection, int knockbackAmount) {
+        //10px of knockback per point, applied over the 0.05s timer
+        float knockbackSpeed = knockbackAmount * 10f / 0.05f;
+        switch (walkDirection) {
+            case 0: knockbackVelX = knockbackSpeed; break; //walking left, pushed right
+            case 1: knockbackVelX = -knockbackSpeed; break; //walking right, pushed left
+            case 2: knockbackVelY = knockbackSpeed; break; //walking up, pushed down
+            case 3: knockbackVelY = -knockbackSpeed; break; //walking down, pushed up
+        }
+        knockbackTimer = 0.05f;
+    }
+
     public void killCheck() {
         if (health <= 0) {
             World.currentWorld.removeSprites.add(this);
@@ -244,7 +274,6 @@ public class Enemy extends Npc {
             int coinDrop = coinDropRate.nextInt(60);
 
             List<Coin> coins = new ArrayList<Coin>();
-            coins.add(new Coin((int)getPosX()-20,(int)getPosY()-20));
 
             if (coinDrop >= 40) {
                 coins.add(new Coin((int)getPosX()+20,(int)getPosY()+40));
@@ -375,6 +404,16 @@ public class Enemy extends Npc {
             animations[currentAnimation].playAnimation();
         }
 
+
+        if (knockbackTimer > 0) {
+            knockbackTimer -= deltaTime;
+            moveX = knockbackVelX;
+            moveY = knockbackVelY;
+            if (knockbackTimer <= 0) {
+                knockbackVelX = 0;
+                knockbackVelY = 0;
+            }
+        }
 
         float newX = posX + moveX * deltaTime;
         float newY = posY + moveY * deltaTime;
