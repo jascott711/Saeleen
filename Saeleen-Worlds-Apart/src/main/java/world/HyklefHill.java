@@ -23,6 +23,8 @@ public class HyklefHill extends OpenZone {
         transitionThickness = 230;
 
         addSpawn("start", 1000, 1200);
+        //the cave's south exit leads back here, right outside the cave portal box
+        addSpawn("cave-exit", 2405, 888);
 
         //a portal on the hill leads into the cave
         transitionBoxes.add(new TransitionBox(new Rectangle(2386, 800, 38, 48), "cave", "start"));

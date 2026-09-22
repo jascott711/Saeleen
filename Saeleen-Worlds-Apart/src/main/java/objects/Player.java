@@ -101,6 +101,13 @@ public class Player extends Npc implements ActionListener {
     public Animation animManaFlash = new Animation();
     public Animation animXpFlash = new Animation();
 
+    //while true the player plays the attack sprite sheet instead of the walking one
+    public boolean isAttacking = false;
+    public float attackTimer = 0;
+    public int attackDirection = 0;
+    //full pass of the 8 attack frames in 0.4s
+    private static final float ATTACK_ANIM_TIME = 0.4f;
+
 
     public Player(float posX, float posY) {
         super(posX, posY);
@@ -224,11 +231,19 @@ public class Player extends Npc implements ActionListener {
 
             // set image cell size
             rows = 1;
-            cols = 6;
+            cols = 8;
             BufferedImage[] spriteSheetImagesAttackUp = new BufferedImage[rows * cols];
             BufferedImage[] spriteSheetImagesAttackDown = new BufferedImage[rows * cols];
             BufferedImage[] spriteSheetImagesAttackLeft = new BufferedImage[rows * cols];
             BufferedImage[] spriteSheetImagesAttackRight = new BufferedImage[rows * cols];
+
+            for (int j = 0; j < cols; j++) {
+                spriteSheetImagesAttackUp[j] = spriteAttackSheet.getSubimage(j * width, 0 * height, width, height);
+            }
+            for (BufferedImage image : spriteSheetImagesAttackUp) {
+                animAttackUp.images.add(image);
+            }
+            animAttackUp.setFps(20);
 
             for (int j = 0; j < cols; j++) {
                 spriteSheetImagesAttackLeft[j] = spriteAttackSheet.getSubimage(j * width, 1 * height, width, height);
@@ -236,7 +251,23 @@ public class Player extends Npc implements ActionListener {
             for (BufferedImage image : spriteSheetImagesAttackLeft) {
                 animAttackLeft.images.add(image);
             }
-            animAttackLeft.setFps(12);
+            animAttackLeft.setFps(20);
+
+            for (int j = 0; j < cols; j++) {
+                spriteSheetImagesAttackDown[j] = spriteAttackSheet.getSubimage(j * width, 2 * height, width, height);
+            }
+            for (BufferedImage image : spriteSheetImagesAttackDown) {
+                animAttackDown.images.add(image);
+            }
+            animAttackDown.setFps(20);
+
+            for (int j = 0; j < cols; j++) {
+                spriteSheetImagesAttackRight[j] = spriteAttackSheet.getSubimage(j * width, 3 * height, width, height);
+            }
+            for (BufferedImage image : spriteSheetImagesAttackRight) {
+                animAttackRight.images.add(image);
+            }
+            animAttackRight.setFps(20);
 
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -246,8 +277,8 @@ public class Player extends Npc implements ActionListener {
             e.printStackTrace();
         }
 
-        animations = new Animation[] { animLeft, animRight, animUp, animDown, // 0, 1, 2, 3
-                animAttackLeft // 4, 5, 6, 7
+        animations = new Animation[] { animLeft, animRight, animUp, animDown, // 0, 1, 2, 3 walk
+                animAttackLeft, animAttackRight, animAttackUp, animAttackDown // 4, 5, 6, 7 attack
         };
 
         animationsTakeDamage = new Animation[] {
@@ -497,7 +528,9 @@ public class Player extends Npc implements ActionListener {
             } else if (getDimensions().x >= checkForKeyA) {
                 moveX -= runSpeed;
                 currentAnimation = 0;
-                animations[currentAnimation].playAnimation();
+                if (!isAttacking) {
+                    animations[currentAnimation].playAnimation();
+                }
             }
         }
         if (Input.getKey(KeyEvent.VK_D)) {
@@ -509,7 +542,9 @@ public class Player extends Npc implements ActionListener {
             } else if (getDimensions().x <= checkForKeyD) {
                 moveX += runSpeed;
                 currentAnimation = 1;
-                animations[currentAnimation].playAnimation();
+                if (!isAttacking) {
+                    animations[currentAnimation].playAnimation();
+                }
             }
         }
         if (Input.getKey(KeyEvent.VK_W)) {
@@ -521,7 +556,9 @@ public class Player extends Npc implements ActionListener {
             } else if (getDimensions().y >= checkForKeyW) {
                 moveY -= runSpeed;
                 currentAnimation = 2;
-                animations[currentAnimation].playAnimation();
+                if (!isAttacking) {
+                    animations[currentAnimation].playAnimation();
+                }
             }
         }
         if (Input.getKey(KeyEvent.VK_S)) {
@@ -533,8 +570,25 @@ public class Player extends Npc implements ActionListener {
             } else if (getDimensions().y <= checkForKeyS) {
                 moveY += runSpeed;
                 currentAnimation = 3;
-                animations[currentAnimation].playAnimation();
+                if (!isAttacking) {
+                    animations[currentAnimation].playAnimation();
+                }
             }
+        }
+
+        //ability1 attack: step the attack sprite sheet's frames by elapsed real time so all
+        //frames play over ATTACK_ANIM_TIME, then resume walking where it left off
+        if (isAttacking) {
+            currentAnimation = 4 + attackDirection;
+            Animation attackAnim = animations[currentAnimation];
+            attackTimer += deltaTime;
+            int attackFrame = (int) (attackTimer / ATTACK_ANIM_TIME * attackAnim.images.size());
+            if (attackFrame >= attackAnim.images.size()) {
+                attackFrame = attackAnim.images.size() - 1;
+                isAttacking = false;
+                currentAnimation = attackDirection;
+            }
+            attackAnim.setCurrentImage(attackFrame);
         }
 
         if (Input.getKeyDown(KeyEvent.VK_F)) {
@@ -804,6 +858,10 @@ public class Player extends Npc implements ActionListener {
 							Slash slash = new Slash(World.currentPlayer);
 							World.currentWorld.addSprite(slash);
 							abilityCooldown = 0.4f;
+							isAttacking = true;
+                            attackTimer = 0;
+                            attackDirection = direction;
+                            animations[4 + attackDirection].setCurrentImage(0);
 						}
 						break;
 					}
@@ -812,6 +870,10 @@ public class Player extends Npc implements ActionListener {
                             Knife knife = new Knife(World.currentPlayer.getPosX(), World.currentPlayer.getPosY(), direction);
                             World.currentWorld.addSprite(knife);
                             abilityCooldown = 1.0f;
+                            isAttacking = true;
+                            attackTimer = 0;
+                            attackDirection = direction;
+                            animations[4 + attackDirection].setCurrentImage(0);
                         }
 						break;
 					}
@@ -832,6 +894,10 @@ public class Player extends Npc implements ActionListener {
                             System.out.println("After bolt mana = "+World.currentPlayer.getMana());
                             System.out.println("currentMana = "+ currentMana );
                             abilityCooldown = 3.0f;
+                            isAttacking = true;
+                            attackTimer = 0;
+                            attackDirection = direction;
+                            animations[4 + attackDirection].setCurrentImage(0);
                             break;
 						}
 					}

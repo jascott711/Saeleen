@@ -20,8 +20,8 @@ public class Cave extends NeutralZone {
 //the cave appears just above the south exit box
         addSpawn("start", mapWidth / 2, mapHeight - transitionThickness - 100);
 
-        //the cave's only exit is its south box, it leads back to the hill
-        transitionBoxes.add(new TransitionBox(new Rectangle(0, mapHeight - transitionThickness, mapWidth, transitionThickness), "hyklef-hill", "start"));
+        //the cave's only exit is its south box, it leads back to the hill outside the cave portal
+        transitionBoxes.add(new TransitionBox(new Rectangle(0, mapHeight - transitionThickness, mapWidth, transitionThickness), "hyklef-hill", "cave-exit"));
     }
 
     @Override
