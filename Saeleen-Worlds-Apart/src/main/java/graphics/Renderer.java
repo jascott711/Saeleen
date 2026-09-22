@@ -16,6 +16,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.VolatileImage;
 import java.io.IOException;
+import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
@@ -31,6 +32,8 @@ public class Renderer {
 
     private static Frame frame;
     private static Canvas canvas;
+
+    private static HashMap<String, BufferedImage> imageCache = new HashMap<String, BufferedImage>();
 
     private static int canvasWidth = 0;
     private static int canvasHeight = 0;
@@ -211,11 +214,21 @@ public class Renderer {
     }
 
     public static BufferedImage loadImage(String path) throws IOException {
+        //keep ImageIO streams in memory instead of disk-cache files
+        ImageIO.setUseCache(false);
+
+        BufferedImage cachedImage = imageCache.get(path);
+        if (cachedImage != null) {
+            return cachedImage;
+        }
+
         BufferedImage rawImage = ImageIO.read(Renderer.class.getResource(path));
         BufferedImage finalImage = canvas.getGraphicsConfiguration()
             .createCompatibleImage(rawImage.getWidth(), rawImage.getHeight(),rawImage.getTransparency());
 
         finalImage.getGraphics().drawImage(rawImage,0,0,rawImage.getWidth(),rawImage.getHeight(),null);
+
+        imageCache.put(path, finalImage);
 
         return finalImage;
     }

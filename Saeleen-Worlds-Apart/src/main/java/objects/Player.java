@@ -384,6 +384,44 @@ public class Player extends Npc implements ActionListener {
         }
     }
 
+    //recomputes the position-based state (bounding boxes, near-edge flags, camera)
+    //immediately after a zone load teleports the player
+    public void refreshPosition() {
+        dimensions.x = (int) getPosX() - dimensions.width / 2;
+        dimensions.y = (int) getPosY() - dimensions.height / 2;
+        vision.x = (int) getPosX() - width / 2;
+        vision.y = (int) getPosY();
+
+        if (getPosX() < Renderer.gameWidth / 2) {
+            isNearEdgeOfMapXMin = true;
+        } else {
+            isNearEdgeOfMapXMin = false;
+        }
+        if (getPosX() > World.mapWidth - (Renderer.gameWidth / 2)) {
+            isNearEdgeOfMapXMax = true;
+        } else {
+            isNearEdgeOfMapXMax = false;
+        }
+        if (getPosY() < Renderer.gameHeight / 2) {
+            isNearEdgeOfMapYMin = true;
+        } else {
+            isNearEdgeOfMapYMin = false;
+        }
+        if (getPosY() > World.mapHeight - (Renderer.gameHeight / 2)) {
+            isNearEdgeOfMapYMax = true;
+        } else {
+            isNearEdgeOfMapYMax = false;
+        }
+        if (isNearEdgeOfMapXMin || isNearEdgeOfMapXMax || isNearEdgeOfMapYMin || isNearEdgeOfMapYMax) {
+            isNearEdgeOfMap = true;
+        } else {
+            isNearEdgeOfMap = false;
+        }
+
+        Renderer.camX = getPosX();
+        Renderer.camY = getPosY();
+    }
+
     @Override
     public void update(float deltaTime) {
         float moveY = 0;
@@ -453,7 +491,7 @@ public class Player extends Npc implements ActionListener {
         if (Input.getKey(KeyEvent.VK_A)) {
             // west
             direction = 0;
-            int checkForKeyA = width / 2;
+            int checkForKeyA = 0;
             if (isIntersectingIob) {
                 //setPosX((getWidth() / 2) - stepback);
             } else if (getDimensions().x >= checkForKeyA) {
@@ -465,7 +503,7 @@ public class Player extends Npc implements ActionListener {
         if (Input.getKey(KeyEvent.VK_D)) {
             // east
             direction = 1;
-            int checkForKeyD = Renderer.gameWidth * 3 - 300;
+            int checkForKeyD = World.mapWidth;
             if (isIntersectingIob) {
                 //setPosX(getPosX()-(getWidth() / 2) + stepback);
             } else if (getDimensions().x <= checkForKeyD) {
@@ -473,12 +511,11 @@ public class Player extends Npc implements ActionListener {
                 currentAnimation = 1;
                 animations[currentAnimation].playAnimation();
             }
-            System.out.println((getWidth() / 2) + stepback);
         }
         if (Input.getKey(KeyEvent.VK_W)) {
             // north
             direction = 2;
-            int checkForKeyW = 140;
+            int checkForKeyW = 0;
             if (isIntersectingIob) {
                 //setPosY(stepback);
             } else if (getDimensions().y >= checkForKeyW) {
@@ -490,7 +527,7 @@ public class Player extends Npc implements ActionListener {
         if (Input.getKey(KeyEvent.VK_S)) {
             // south
             direction = 3;
-            int checkForKeyS = Renderer.gameHeight * 3 - 200;
+            int checkForKeyS = World.mapHeight;
             if (isIntersectingIob) {
                 //setPosY(stepback);
             } else if (getDimensions().y <= checkForKeyS) {
@@ -549,13 +586,13 @@ public class Player extends Npc implements ActionListener {
         //keep the player inside the map bounds
         if (newX < dimensions.width / 2) {
             newX = dimensions.width / 2;
-        } else if (newX > Renderer.gameWidth * 3 - dimensions.width / 2) {
-            newX = Renderer.gameWidth * 3 - dimensions.width / 2;
+        } else if (newX > World.mapWidth - dimensions.width / 2) {
+            newX = World.mapWidth - dimensions.width / 2;
         }
         if (newY < dimensions.height / 2) {
             newY = dimensions.height / 2;
-        } else if (newY > Renderer.gameHeight * 3 - dimensions.height / 2) {
-            newY = Renderer.gameHeight * 3 - dimensions.height / 2;
+        } else if (newY > World.mapHeight - dimensions.height / 2) {
+            newY = World.mapHeight - dimensions.height / 2;
         }
 
         Rectangle testDimensionsX = new Rectangle(
@@ -620,7 +657,7 @@ public class Player extends Npc implements ActionListener {
         } else {
             isNearEdgeOfMapXMin = false;
         }
-        if (getPosX() > Renderer.gameWidth * 3 - (Renderer.gameWidth / 2)) {
+        if (getPosX() > World.mapWidth - (Renderer.gameWidth / 2)) {
             // east
             isNearEdgeOfMapXMax = true;
         } else {
@@ -632,7 +669,7 @@ public class Player extends Npc implements ActionListener {
         } else {
             isNearEdgeOfMapYMin = false;
         }
-        if (getPosY() > Renderer.gameHeight * 3 - (Renderer.gameHeight / 2)) {
+        if (getPosY() > World.mapHeight - (Renderer.gameHeight / 2)) {
             // south
             isNearEdgeOfMapYMax = true;
         } else {
@@ -943,14 +980,14 @@ public class Player extends Npc implements ActionListener {
         if (World.currentPlayer.isNearEdgeOfMapXMin) {
             realX = (int) posX - (playerTakeDamageImage.getWidth() / 2);
         } else if (World.currentPlayer.isNearEdgeOfMapXMax) {
-            realX = (int) posX - (playerTakeDamageImage.getWidth() / 2) - (Renderer.gameWidth * 2);
+            realX = (int) posX - (playerTakeDamageImage.getWidth() / 2) - (World.mapWidth - Renderer.gameWidth);
         } else {
             realX = realX - (int)Renderer.camX + Renderer.gameWidth / 2;
         }
         if (World.currentPlayer.isNearEdgeOfMapYMin) {
             realY = (int) posY - (playerTakeDamageImage.getHeight() / 2);
         } else if (World.currentPlayer.isNearEdgeOfMapYMax) {
-            realY = (int) posY - (playerTakeDamageImage.getHeight() / 2) - (Renderer.gameHeight * 2);
+            realY = (int) posY - (playerTakeDamageImage.getHeight() / 2) - (World.mapHeight - Renderer.gameHeight);
         } else {
             realY = realY - (int)Renderer.camY + Renderer.gameHeight / 2;
         }

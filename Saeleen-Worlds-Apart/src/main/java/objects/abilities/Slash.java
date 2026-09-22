@@ -72,11 +72,12 @@ public class Slash extends Mob {
     //current center angle of the swing, 0 degrees = east, positive spins toward the sky
     private float centerAngle() {
         float t = Math.min(elapsed / swingDuration, 1f);
+        float r = 1 - t; //swing reversed: left to right instead of right to left
         switch (faceDirection) {
-            case 0: return 120 + SWING_DEGREES * t + SWING_PHASE; //left, mirror of the facing-right swing
-            case 2: return 30 + SWING_DEGREES * t + SWING_PHASE; //up, sweeping across the top
-            case 3: return -30 - SWING_DEGREES * t + SWING_PHASE; //down, sweeping across the bottom
-            default: return 60 - SWING_DEGREES * t + SWING_PHASE; //right
+            case 0: return 120 + SWING_DEGREES * r + SWING_PHASE; //left, mirror of the facing-right swing
+            case 2: return 30 + SWING_DEGREES * r + SWING_PHASE; //up, sweeping across the top
+            case 3: return -30 - SWING_DEGREES * r + SWING_PHASE; //down, sweeping across the bottom
+            default: return 60 - SWING_DEGREES * r + SWING_PHASE; //right
         }
     }
 
@@ -157,7 +158,7 @@ public class Slash extends Mob {
             return realX; //west
         }
         if (World.currentPlayer.isNearEdgeOfMapXMax) {
-            return realX - Renderer.gameWidth * 2; //east
+            return realX - (World.mapWidth - Renderer.gameWidth); //east
         }
         return realX - (int) Renderer.camX + Renderer.gameWidth / 2;
     }
@@ -168,7 +169,7 @@ public class Slash extends Mob {
             return realY; //north
         }
         if (World.currentPlayer.isNearEdgeOfMapYMax) {
-            return realY - Renderer.gameHeight * 2; //south
+            return realY - (World.mapHeight - Renderer.gameHeight); //south
         }
         return realY - (int) Renderer.camY + Renderer.gameHeight / 2;
     }

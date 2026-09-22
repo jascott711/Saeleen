@@ -111,7 +111,7 @@ public class Bullet extends Mob {
             realX = (int) posX - (image.getWidth() / 2);
         } else if (World.currentPlayer.isNearEdgeOfMapXMax) {
             //east
-            realX = (int) posX - (image.getWidth() / 2) - (Renderer.gameWidth * 2);
+            realX = (int) posX - (image.getWidth() / 2) - (World.mapWidth - Renderer.gameWidth);
         } else {
             realX = realX - (int)Renderer.camX + Renderer.gameWidth / 2;
         }
@@ -120,7 +120,7 @@ public class Bullet extends Mob {
             realY = (int) posY - (image.getHeight() / 2); 
         } else if (World.currentPlayer.isNearEdgeOfMapYMax) {
             //south
-            realY = (int) posY - (image.getHeight() / 2) - (Renderer.gameHeight * 2);
+            realY = (int) posY - (image.getHeight() / 2) - (World.mapHeight - Renderer.gameHeight);
         } else {
             realY = realY - (int)Renderer.camY + Renderer.gameHeight / 2;
         }

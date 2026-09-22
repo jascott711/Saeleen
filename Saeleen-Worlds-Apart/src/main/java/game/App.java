@@ -1,25 +1,24 @@
 package game;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 import graphics.*;
 import objects.Player;
-import objects.Tree;
-import objects.impassable.Iob;
-import objects.items.Apple;
-import objects.items.Item;
 import objects.items.ManaPotion;
 
-import objects.npcs.aggressive.Soldier;
-import objects.npcs.passive.Tatem;
 import ui.*;
+import world.Cave;
+import world.HyklefHill;
 import world.SaveGame;
 import world.World;
+import world.Zone;
 
 /**
  * App
  */
 public final class App {
+
+    private static HashMap<String, Zone> zones = new HashMap<String, Zone>();
 
     public App() {
         Renderer.init();
@@ -29,52 +28,47 @@ public final class App {
 
     public static void startNewGame() {
         resetPlayer();
+        loadZone("hyklef-hill", "start");
+    }
 
-        try {
-            World.currentWorld = new world.World();
+    //loads a zone: the zone loads its own assets, then the player is spawned
+    //at the zone's spawn point referenced by spawnId
+    public static void loadZone(String zoneId, String spawnId) {
+        initZones();
 
-            //add npcs
-            World.currentWorld.npcSprites.add(new Tatem(1250,750));
+        Zone zone = zones.get(zoneId);
+        World.currentWorld = new world.World();
+        zone.load();
+        World.currentWorld.transitionBoxes.addAll(zone.transitionBoxes);
 
-            //add enemies
-            Soldier[] enemies = {
-                new Soldier(3000,1500), new Soldier(3030,1600), new Soldier(3020,1700),
-                new Soldier(3200,1800), new Soldier(3130,1900), new Soldier(3220,2000)
-            };
-            for (Soldier sol : enemies) {
-                World.currentWorld.npcSprites.add(sol);
-            }
+        addGameUI();
 
-            //add impassable objects
-            Iob[] iobs = {
-                new Tree(3520, 2000), new Tree(3960, 1800), new Tree(1450, 1350)
-            };
-            for (Iob iob : iobs) {
-                World.currentWorld.iobSprites.add(iob);
-            }
-            
-            //add items
-            Item[] items = {
-                new Apple(3520, 2010), new Apple(3500, 2012), new Apple(3550, 2020), 
-                new Apple(3960, 1815), new Apple(3930, 1803), new Apple(3990, 1800), 
-            };
-            for (Item item : items) {
-                World.currentWorld.itemSprites.add(item);
-            }
+        int[] spawn = zone.spawnPoints.get(spawnId);
+        World.currentPlayer.setPosX(spawn[0]);
+        World.currentPlayer.setPosY(spawn[1]);
+        World.currentPlayer.refreshPosition();
+    }
 
-            //add UI
-            UIComponent[] uicomponents = {
-                new PlayerStats(World.currentPlayer), new HealthBar(World.currentPlayer), new ManaBar(World.currentPlayer),
-                new ExperienceBar(World.currentPlayer), new DisplayAbility(World.currentPlayer),
-                new DisplayAbility2(World.currentPlayer),
-                new DisplayItems(World.currentPlayer), new StatsScreen(World.currentPlayer)
-            };
-            for (UIComponent uicomponent : uicomponents) {
-                World.currentWorld.uicomponents.add(uicomponent);
-            }
+    //registers every zone type in the game, each zone loads its own assets
+    private static void initZones() {
+        if (!zones.isEmpty()) {
+            return;
+        }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        zones.put("hyklef-hill", new HyklefHill());
+        zones.put("cave", new Cave());
+    }
+
+    private static void addGameUI() {
+        //add UI
+        UIComponent[] uicomponents = {
+            new PlayerStats(World.currentPlayer), new HealthBar(World.currentPlayer), new ManaBar(World.currentPlayer),
+            new ExperienceBar(World.currentPlayer), new DisplayAbility(World.currentPlayer),
+            new DisplayAbility2(World.currentPlayer),
+            new DisplayItems(World.currentPlayer), new StatsScreen(World.currentPlayer)
+        };
+        for (UIComponent uicomponent : uicomponents) {
+            World.currentWorld.uicomponents.add(uicomponent);
         }
     }
 

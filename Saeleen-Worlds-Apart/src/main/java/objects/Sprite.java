@@ -185,14 +185,14 @@ public class Sprite {
         if (World.currentPlayer.isNearEdgeOfMapXMin) {
             realX = (int) posX - (image.getWidth() / 2);
         } else if (World.currentPlayer.isNearEdgeOfMapXMax) {
-            realX = (int) posX - (image.getWidth() / 2) - (Renderer.gameWidth * 2);
+            realX = (int) posX - (image.getWidth() / 2) - (World.mapWidth - Renderer.gameWidth);
         } else {
             realX = realX - (int)Renderer.camX + Renderer.gameWidth / 2;
         }
         if (World.currentPlayer.isNearEdgeOfMapYMin) {
             realY = (int) posY - (image.getHeight() / 2);
         } else if (World.currentPlayer.isNearEdgeOfMapYMax) {
-            realY = (int) posY - (image.getHeight() / 2) - (Renderer.gameHeight * 2);
+            realY = (int) posY - (image.getHeight() / 2) - (World.mapHeight - Renderer.gameHeight);
         } else {
             realY = realY - (int)Renderer.camY + Renderer.gameHeight / 2;
         }
@@ -209,7 +209,7 @@ public class Sprite {
                 if (World.currentPlayer.isNearEdgeOfMapXMin) {
                     boxScreenX = box.x;
                 } else if (World.currentPlayer.isNearEdgeOfMapXMax) {
-                    boxScreenX = box.x - (Renderer.gameWidth * 2);
+                    boxScreenX = box.x - (World.mapWidth - Renderer.gameWidth);
                 } else {
                     boxScreenX = box.x - (int) Renderer.camX + Renderer.gameWidth / 2;
                 }
@@ -217,7 +217,7 @@ public class Sprite {
                 if (World.currentPlayer.isNearEdgeOfMapYMin) {
                     boxScreenY = box.y;
                 } else if (World.currentPlayer.isNearEdgeOfMapYMax) {
-                    boxScreenY = box.y - (Renderer.gameHeight * 2);
+                    boxScreenY = box.y - (World.mapHeight - Renderer.gameHeight);
                 } else {
                     boxScreenY = box.y - (int) Renderer.camY + Renderer.gameHeight / 2;
                 }
